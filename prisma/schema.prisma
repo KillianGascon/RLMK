@@ -1,6 +1,5 @@
 generator client {
   provider = "prisma-client-js"
-  output   = "../lib/generated/prisma"
 }
 
 datasource db {
@@ -99,7 +98,7 @@ model Utilisateur {
   Prenom_Utilisateur      String              @db.VarChar(100)
   Identifiant_Utilisateur String              @unique(map: "Identifiant_Utilisateur") @db.VarChar(50)
   MotDePasse_Utilisateur  String              @db.VarChar(255)
-  Role_Utilisateur        String              @db.VarChar(50)
+  Role_Utilisateur        String?              @db.VarChar(50)
   Email_Utilisateur       String              @unique(map: "Email_Utilisateur") @db.VarChar(100)
   Telephone_Utilisateur   String?             @db.VarChar(20)
   Utilisateur_Foyer       Utilisateur_Foyer[]

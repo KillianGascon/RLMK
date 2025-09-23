@@ -105,17 +105,17 @@ export function RoomManagement() {
     const getRoomIcon = (type: string) => {
         switch (type) {
             case "bedroom":
-                return <Bed className="h-5 w-5" />
+                return <Bed className="h-4 w-4 md:h-5 md:w-5" />
             case "kitchen":
-                return <ChefHat className="h-5 w-5" />
+                return <ChefHat className="h-4 w-4 md:h-5 md:w-5" />
             case "bathroom":
-                return <Bath className="h-5 w-5" />
+                return <Bath className="h-4 w-4 md:h-5 md:w-5" />
             case "living":
-                return <Sofa className="h-5 w-5" />
+                return <Sofa className="h-4 w-4 md:h-5 md:w-5" />
             case "garage":
-                return <Car className="h-5 w-5" />
+                return <Car className="h-4 w-4 md:h-5 md:w-5" />
             default:
-                return <Home className="h-5 w-5" />
+                return <Home className="h-4 w-4 md:h-5 md:w-5" />
         }
     }
 
@@ -136,22 +136,25 @@ export function RoomManagement() {
     const averageTemp = rooms.reduce((sum, room) => sum + (room.temperature || 0), 0) / rooms.length
 
     return (
-        <div className="space-y-6">
+        <div className="space-y-4 md:space-y-6">
             {/* Header */}
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div>
-                    <h2 className="text-2xl font-bold">Gestion des pièces</h2>
-                    <p className="text-muted-foreground">Configurez et surveillez les pièces de votre foyer</p>
+                    <h2 className="text-xl md:text-2xl font-bold">Gestion des pièces</h2>
+                    <p className="text-sm md:text-base text-muted-foreground">
+                        Configurez et surveillez les pièces de votre foyer
+                    </p>
                 </div>
 
                 <Dialog open={isAddRoomOpen} onOpenChange={setIsAddRoomOpen}>
                     <DialogTrigger asChild>
-                        <Button className="flex items-center gap-2">
+                        <Button className="flex items-center gap-2 w-full sm:w-auto">
                             <Plus className="h-4 w-4" />
-                            Ajouter une pièce
+                            <span className="hidden sm:inline">Ajouter une pièce</span>
+                            <span className="sm:hidden">Ajouter</span>
                         </Button>
                     </DialogTrigger>
-                    <DialogContent>
+                    <DialogContent className="w-[95vw] max-w-md">
                         <DialogHeader>
                             <DialogTitle>Ajouter une nouvelle pièce</DialogTitle>
                             <DialogDescription>Configurez une nouvelle pièce dans votre foyer</DialogDescription>
@@ -217,98 +220,98 @@ export function RoomManagement() {
             </div>
 
             {/* Stats Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
                 <Card>
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium">Total pièces</CardTitle>
-                        <Home className="h-4 w-4 text-muted-foreground" />
+                        <CardTitle className="text-xs md:text-sm font-medium">Total pièces</CardTitle>
+                        <Home className="h-3 w-3 md:h-4 md:w-4 text-muted-foreground" />
                     </CardHeader>
                     <CardContent>
-                        <div className="text-2xl font-bold">{rooms.length}</div>
+                        <div className="text-xl md:text-2xl font-bold">{rooms.length}</div>
                         <p className="text-xs text-muted-foreground">Pièces configurées</p>
                     </CardContent>
                 </Card>
 
                 <Card>
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium">Surface totale</CardTitle>
-                        <Settings className="h-4 w-4 text-muted-foreground" />
+                        <CardTitle className="text-xs md:text-sm font-medium">Surface totale</CardTitle>
+                        <Settings className="h-3 w-3 md:h-4 md:w-4 text-muted-foreground" />
                     </CardHeader>
                     <CardContent>
-                        <div className="text-2xl font-bold">{totalArea}m²</div>
+                        <div className="text-xl md:text-2xl font-bold">{totalArea}m²</div>
                         <p className="text-xs text-muted-foreground">Surface habitable</p>
                     </CardContent>
                 </Card>
 
                 <Card>
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium">Température moy.</CardTitle>
-                        <Thermometer className="h-4 w-4 text-muted-foreground" />
+                        <CardTitle className="text-xs md:text-sm font-medium">Température moy.</CardTitle>
+                        <Thermometer className="h-3 w-3 md:h-4 md:w-4 text-muted-foreground" />
                     </CardHeader>
                     <CardContent>
-                        <div className="text-2xl font-bold">{averageTemp.toFixed(1)}°C</div>
+                        <div className="text-xl md:text-2xl font-bold">{averageTemp.toFixed(1)}°C</div>
                         <p className="text-xs text-muted-foreground">Température moyenne</p>
                     </CardContent>
                 </Card>
 
                 <Card>
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium">Connectées</CardTitle>
-                        <Wifi className="h-4 w-4 text-muted-foreground" />
+                        <CardTitle className="text-xs md:text-sm font-medium">Connectées</CardTitle>
+                        <Wifi className="h-3 w-3 md:h-4 md:w-4 text-muted-foreground" />
                     </CardHeader>
                     <CardContent>
-                        <div className="text-2xl font-bold">{rooms.filter((r) => r.hasWifi).length}</div>
+                        <div className="text-xl md:text-2xl font-bold">{rooms.filter((r) => r.hasWifi).length}</div>
                         <p className="text-xs text-muted-foreground">Pièces avec WiFi</p>
                     </CardContent>
                 </Card>
             </div>
 
             {/* Rooms Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4">
                 {rooms.map((room) => (
                     <Card key={room.id} className="hover:shadow-md transition-shadow">
                         <CardHeader className="pb-3">
                             <div className="flex items-center justify-between">
-                                <div className="flex items-center gap-3">
-                                    <div className="p-2 bg-primary/10 rounded-lg">{getRoomIcon(room.type)}</div>
+                                <div className="flex items-center gap-2 md:gap-3">
+                                    <div className="p-1.5 md:p-2 bg-primary/10 rounded-lg">{getRoomIcon(room.type)}</div>
                                     <div>
-                                        <CardTitle className="text-lg">{room.name}</CardTitle>
-                                        <Badge variant="secondary" className="mt-1">
+                                        <CardTitle className="text-sm md:text-lg">{room.name}</CardTitle>
+                                        <Badge variant="secondary" className="mt-1 text-xs">
                                             {getRoomTypeLabel(room.type)}
                                         </Badge>
                                     </div>
                                 </div>
                                 <Button variant="ghost" size="sm">
-                                    <Settings className="h-4 w-4" />
+                                    <Settings className="h-3 w-3 md:h-4 md:w-4" />
                                 </Button>
                             </div>
                         </CardHeader>
-                        <CardContent className="space-y-4">
-                            {room.description && <p className="text-sm text-muted-foreground">{room.description}</p>}
+                        <CardContent className="space-y-3 md:space-y-4">
+                            {room.description && <p className="text-xs md:text-sm text-muted-foreground">{room.description}</p>}
 
-                            <div className="grid grid-cols-2 gap-4 text-sm">
-                                <div className="flex items-center gap-2">
-                                    <Settings className="h-4 w-4 text-muted-foreground" />
+                            <div className="grid grid-cols-2 gap-2 md:gap-4 text-xs md:text-sm">
+                                <div className="flex items-center gap-1 md:gap-2">
+                                    <Settings className="h-3 w-3 md:h-4 md:w-4 text-muted-foreground" />
                                     <span>{room.area}m²</span>
                                 </div>
                                 {room.temperature && (
-                                    <div className="flex items-center gap-2">
-                                        <Thermometer className="h-4 w-4 text-muted-foreground" />
+                                    <div className="flex items-center gap-1 md:gap-2">
+                                        <Thermometer className="h-3 w-3 md:h-4 md:w-4 text-muted-foreground" />
                                         <span>{room.temperature}°C</span>
                                     </div>
                                 )}
                             </div>
 
-                            <div className="flex items-center gap-2">
+                            <div className="flex items-center gap-1 md:gap-2 flex-wrap">
                                 {room.hasWifi && (
                                     <Badge variant="outline" className="text-xs">
-                                        <Wifi className="h-3 w-3 mr-1" />
+                                        <Wifi className="h-2 w-2 md:h-3 md:w-3 mr-1" />
                                         WiFi
                                     </Badge>
                                 )}
                                 {room.hasLighting && (
                                     <Badge variant="outline" className="text-xs">
-                                        <Lightbulb className="h-3 w-3 mr-1" />
+                                        <Lightbulb className="h-2 w-2 md:h-3 md:w-3 mr-1" />
                                         Éclairage
                                     </Badge>
                                 )}
@@ -318,14 +321,14 @@ export function RoomManagement() {
                                 <div>
                                     <p className="text-xs font-medium text-muted-foreground mb-2">Appareils ({room.devices.length})</p>
                                     <div className="flex flex-wrap gap-1">
-                                        {room.devices.slice(0, 3).map((device, index) => (
+                                        {room.devices.slice(0, 2).map((device, index) => (
                                             <Badge key={index} variant="secondary" className="text-xs">
                                                 {device}
                                             </Badge>
                                         ))}
-                                        {room.devices.length > 3 && (
+                                        {room.devices.length > 2 && (
                                             <Badge variant="secondary" className="text-xs">
-                                                +{room.devices.length - 3}
+                                                +{room.devices.length - 2}
                                             </Badge>
                                         )}
                                     </div>

@@ -233,22 +233,23 @@ export function FoodInventory() {
     }
 
     return (
-        <div className="space-y-6">
+        <div className="space-y-4 md:space-y-6">
             {/* Header */}
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div>
-                    <h2 className="text-2xl font-bold">Gestion des stocks alimentaires</h2>
-                    <p className="text-muted-foreground">Suivez vos provisions et évitez le gaspillage</p>
+                    <h2 className="text-xl md:text-2xl font-bold">Gestion des stocks alimentaires</h2>
+                    <p className="text-sm md:text-base text-muted-foreground">Suivez vos provisions et évitez le gaspillage</p>
                 </div>
 
                 <Dialog open={isAddItemOpen} onOpenChange={setIsAddItemOpen}>
                     <DialogTrigger asChild>
-                        <Button className="flex items-center gap-2">
+                        <Button className="flex items-center gap-2 w-full sm:w-auto">
                             <Plus className="h-4 w-4" />
-                            Ajouter un article
+                            <span className="hidden sm:inline">Ajouter un article</span>
+                            <span className="sm:hidden">Ajouter</span>
                         </Button>
                     </DialogTrigger>
-                    <DialogContent className="max-w-md">
+                    <DialogContent className="w-[95vw] max-w-md max-h-[90vh] overflow-y-auto">
                         <DialogHeader>
                             <DialogTitle>Ajouter un nouvel article</DialogTitle>
                             <DialogDescription>Ajoutez un nouvel article à votre inventaire alimentaire</DialogDescription>
@@ -388,7 +389,7 @@ export function FoodInventory() {
 
             {/* Alerts */}
             {(expiredItems.length > 0 || expiringSoonItems.length > 0 || lowStockItems.length > 0) && (
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 md:gap-4">
                     {expiredItems.length > 0 && (
                         <Card className="border-red-200 bg-red-50">
                             <CardHeader className="pb-2">
@@ -437,7 +438,7 @@ export function FoodInventory() {
             )}
 
             {/* Stats */}
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
                 <Card>
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                         <CardTitle className="text-sm font-medium">Frigo</CardTitle>
@@ -484,7 +485,7 @@ export function FoodInventory() {
             </div>
 
             {/* Search and Filters */}
-            <div className="flex flex-col sm:flex-row gap-4">
+            <div className="flex flex-col sm:flex-row gap-3 md:gap-4">
                 <div className="relative flex-1">
                     <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                     <Input
@@ -509,7 +510,7 @@ export function FoodInventory() {
             </div>
 
             {/* Items List */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4">
                 {filteredItems.map((item) => (
                     <Card
                         key={item.id}
@@ -525,11 +526,13 @@ export function FoodInventory() {
                     >
                         <CardHeader className="pb-3">
                             <div className="flex items-center justify-between">
-                                <div className="flex items-center gap-3">
-                                    <div className="p-2 bg-primary/10 rounded-lg">{getLocationIcon(item.location)}</div>
-                                    <div>
-                                        <CardTitle className="text-lg">{item.name}</CardTitle>
-                                        <div className="flex items-center gap-2 mt-1">
+                                <div className="flex items-center gap-2 md:gap-3 min-w-0 flex-1">
+                                    <div className="p-1.5 md:p-2 bg-primary/10 rounded-lg flex-shrink-0">
+                                        {getLocationIcon(item.location)}
+                                    </div>
+                                    <div className="min-w-0 flex-1">
+                                        <CardTitle className="text-sm md:text-lg truncate">{item.name}</CardTitle>
+                                        <div className="flex items-center gap-1 md:gap-2 mt-1 flex-wrap">
                                             <Badge variant="secondary" className="text-xs">
                                                 {getCategoryLabel(item.category)}
                                             </Badge>
@@ -539,17 +542,17 @@ export function FoodInventory() {
                                         </div>
                                     </div>
                                 </div>
-                                <div className="flex gap-1">
+                                <div className="flex gap-1 flex-shrink-0">
                                     <Button variant="ghost" size="sm" onClick={() => handleEditItem(item)}>
-                                        <Edit className="h-4 w-4" />
+                                        <Edit className="h-3 w-3 md:h-4 md:w-4" />
                                     </Button>
                                     <Button variant="ghost" size="sm" onClick={() => handleDeleteItem(item.id)}>
-                                        <Trash2 className="h-4 w-4" />
+                                        <Trash2 className="h-3 w-3 md:h-4 md:w-4" />
                                     </Button>
                                 </div>
                             </div>
                         </CardHeader>
-                        <CardContent className="space-y-3">
+                        <CardContent className="space-y-2 md:space-y-3">
                             <div className="flex items-center justify-between">
                                 <span className="text-sm font-medium">Quantité</span>
                                 <span className="text-sm">
@@ -602,7 +605,7 @@ export function FoodInventory() {
 
             {/* Edit Dialog */}
             <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-                <DialogContent className="max-w-md">
+                <DialogContent className="w-[95vw] max-w-md">
                     <DialogHeader>
                         <DialogTitle>Modifier l'article</DialogTitle>
                         <DialogDescription>Modifiez les informations de l'article</DialogDescription>

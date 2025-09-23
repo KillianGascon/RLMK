@@ -94,19 +94,22 @@ export function UserManagement() {
     }
 
     return (
-        <div className="space-y-6">
+        <div className="space-y-4 md:space-y-6">
             {/* Header */}
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div>
-                    <h2 className="text-2xl font-bold">Gestion des utilisateurs</h2>
-                    <p className="text-muted-foreground">Gérez les membres de votre foyer et leurs permissions</p>
+                    <h2 className="text-xl md:text-2xl font-bold">Gestion des utilisateurs</h2>
+                    <p className="text-sm md:text-base text-muted-foreground">
+                        Gérez les membres de votre foyer et leurs permissions
+                    </p>
                 </div>
 
                 <Dialog open={isAddUserOpen} onOpenChange={setIsAddUserOpen}>
                     <DialogTrigger asChild>
-                        <Button className="flex items-center gap-2">
+                        <Button className="flex items-center gap-2 w-full sm:w-auto">
                             <Plus className="h-4 w-4" />
-                            Ajouter un utilisateur
+                            <span className="hidden sm:inline">Ajouter un utilisateur</span>
+                            <span className="sm:hidden">Ajouter</span>
                         </Button>
                     </DialogTrigger>
                     <DialogContent>
@@ -170,15 +173,15 @@ export function UserManagement() {
             </div>
 
             {/* Users Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4">
                 {users.map((user) => (
                     <Card key={user.id} className="hover:shadow-md transition-shadow">
                         <CardHeader className="pb-3">
                             <div className="flex items-center justify-between">
-                                <div className="flex items-center gap-3">
-                                    <Avatar>
+                                <div className="flex items-center gap-2 md:gap-3">
+                                    <Avatar className="w-8 h-8 md:w-10 md:h-10">
                                         <AvatarImage src={user.avatar || "/placeholder.svg"} />
-                                        <AvatarFallback>
+                                        <AvatarFallback className="text-xs md:text-sm">
                                             {user.name
                                                 .split(" ")
                                                 .map((n) => n[0])
@@ -186,33 +189,36 @@ export function UserManagement() {
                                         </AvatarFallback>
                                     </Avatar>
                                     <div>
-                                        <CardTitle className="text-lg">{user.name}</CardTitle>
+                                        <CardTitle className="text-sm md:text-lg">{user.name}</CardTitle>
                                         <div className="flex items-center gap-1 mt-1">
                                             {getRoleIcon(user.role)}
                                             {getRoleBadge(user.role)}
                                         </div>
                                     </div>
                                 </div>
-                                <div className={`w-3 h-3 rounded-full ${user.status === "active" ? "bg-green-500" : "bg-gray-400"}`} />
+                                <div
+                                    className={`w-2 h-2 md:w-3 md:h-3 rounded-full ${user.status === "active" ? "bg-green-500" : "bg-gray-400"}`}
+                                />
                             </div>
                         </CardHeader>
-                        <CardContent className="space-y-3">
-                            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                                <Mail className="h-4 w-4" />
-                                {user.email}
+                        <CardContent className="space-y-2 md:space-y-3">
+                            <div className="flex items-center gap-2 text-xs md:text-sm text-muted-foreground">
+                                <Mail className="h-3 w-3 md:h-4 md:w-4 flex-shrink-0" />
+                                <span className="truncate">{user.email}</span>
                             </div>
                             {user.phone && (
-                                <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                                    <Phone className="h-4 w-4" />
-                                    {user.phone}
+                                <div className="flex items-center gap-2 text-xs md:text-sm text-muted-foreground">
+                                    <Phone className="h-3 w-3 md:h-4 md:w-4 flex-shrink-0" />
+                                    <span>{user.phone}</span>
                                 </div>
                             )}
                             <div className="flex items-center justify-between pt-2 border-t">
                 <span className="text-xs text-muted-foreground">
-                  Rejoint le {new Date(user.joinDate).toLocaleDateString("fr-FR")}
+                  <span className="hidden sm:inline">Rejoint le </span>
+                    {new Date(user.joinDate).toLocaleDateString("fr-FR")}
                 </span>
                                 <Button variant="ghost" size="sm">
-                                    <Settings className="h-4 w-4" />
+                                    <Settings className="h-3 w-3 md:h-4 md:w-4" />
                                 </Button>
                             </div>
                         </CardContent>
@@ -221,7 +227,7 @@ export function UserManagement() {
             </div>
 
             {/* Stats */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 md:gap-4">
                 <Card>
                     <CardHeader className="pb-2">
                         <CardTitle className="text-sm font-medium">Total utilisateurs</CardTitle>

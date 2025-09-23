@@ -125,39 +125,6 @@ export function DashboardOverview() {
                     </CardContent>
                 </Card>
             </div>
-
-            {/* Quick Stats */}
-            <Card>
-                <CardHeader>
-                    <CardTitle>Aperçu rapide</CardTitle>
-                    <CardDescription>État général de votre foyer</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                    <div className="space-y-2">
-                        <div className="flex justify-between text-sm">
-                            <span>Stocks bien approvisionnés</span>
-                            <span>87%</span>
-                        </div>
-                        <Progress value={87} className="h-2" />
-                    </div>
-
-                    <div className="space-y-2">
-                        <div className="flex justify-between text-sm">
-                            <span>Plantes en bonne santé</span>
-                            <span>92%</span>
-                        </div>
-                        <Progress value={92} className="h-2" />
-                    </div>
-
-                    <div className="space-y-2">
-                        <div className="flex justify-between text-sm">
-                            <span>Tâches complétées cette semaine</span>
-                            <span>75%</span>
-                        </div>
-                        <Progress value={75} className="h-2" />
-                    </div>
-                </CardContent>
-            </Card>
         </div>
     )
 }

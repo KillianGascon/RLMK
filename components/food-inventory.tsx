@@ -112,6 +112,9 @@ export function FoodInventory() {
         brand: "",
     })
 
+    const [editingItem, setEditingItem] = useState<FoodItem | null>(null)
+    const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
+
     const handleAddItem = () => {
         if (newItem.name && newItem.quantity > 0) {
             const item: FoodItem = {
@@ -132,6 +135,23 @@ export function FoodInventory() {
                 brand: "",
             })
             setIsAddItemOpen(false)
+        }
+    }
+
+    const handleDeleteItem = (itemId: string) => {
+        setFoodItems(foodItems.filter((item) => item.id !== itemId))
+    }
+
+    const handleEditItem = (item: FoodItem) => {
+        setEditingItem(item)
+        setIsEditDialogOpen(true)
+    }
+
+    const handleUpdateItem = () => {
+        if (editingItem) {
+            setFoodItems(foodItems.map((item) => (item.id === editingItem.id ? editingItem : item)))
+            setEditingItem(null)
+            setIsEditDialogOpen(false)
         }
     }
 
@@ -520,10 +540,10 @@ export function FoodInventory() {
                                     </div>
                                 </div>
                                 <div className="flex gap-1">
-                                    <Button variant="ghost" size="sm">
+                                    <Button variant="ghost" size="sm" onClick={() => handleEditItem(item)}>
                                         <Edit className="h-4 w-4" />
                                     </Button>
-                                    <Button variant="ghost" size="sm">
+                                    <Button variant="ghost" size="sm" onClick={() => handleDeleteItem(item.id)}>
                                         <Trash2 className="h-4 w-4" />
                                     </Button>
                                 </div>
@@ -579,6 +599,79 @@ export function FoodInventory() {
                     </Card>
                 ))}
             </div>
+
+            {/* Edit Dialog */}
+            <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+                <DialogContent className="max-w-md">
+                    <DialogHeader>
+                        <DialogTitle>Modifier l'article</DialogTitle>
+                        <DialogDescription>Modifiez les informations de l'article</DialogDescription>
+                    </DialogHeader>
+                    {editingItem && (
+                        <div className="space-y-4">
+                            <div className="space-y-2">
+                                <Label htmlFor="editItemName">Nom de l'article</Label>
+                                <Input
+                                    id="editItemName"
+                                    value={editingItem.name}
+                                    onChange={(e) => setEditingItem({ ...editingItem, name: e.target.value })}
+                                />
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-4">
+                                <div className="space-y-2">
+                                    <Label htmlFor="editQuantity">Quantité</Label>
+                                    <Input
+                                        id="editQuantity"
+                                        type="number"
+                                        value={editingItem.quantity || ""}
+                                        onChange={(e) =>
+                                            setEditingItem({ ...editingItem, quantity: Number.parseFloat(e.target.value) || 0 })
+                                        }
+                                    />
+                                </div>
+
+                                <div className="space-y-2">
+                                    <Label htmlFor="editUnit">Unité</Label>
+                                    <Select
+                                        value={editingItem.unit}
+                                        onValueChange={(value: FoodItem["unit"]) => setEditingItem({ ...editingItem, unit: value })}
+                                    >
+                                        <SelectTrigger>
+                                            <SelectValue />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="pieces">Pièces</SelectItem>
+                                            <SelectItem value="kg">Kg</SelectItem>
+                                            <SelectItem value="g">Grammes</SelectItem>
+                                            <SelectItem value="L">Litres</SelectItem>
+                                            <SelectItem value="mL">mL</SelectItem>
+                                            <SelectItem value="packages">Paquets</SelectItem>
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+                            </div>
+
+                            <div className="space-y-2">
+                                <Label htmlFor="editExpiryDate">Date d'expiration</Label>
+                                <Input
+                                    id="editExpiryDate"
+                                    type="date"
+                                    value={editingItem.expiryDate}
+                                    onChange={(e) => setEditingItem({ ...editingItem, expiryDate: e.target.value })}
+                                />
+                            </div>
+
+                            <div className="flex justify-end gap-2">
+                                <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>
+                                    Annuler
+                                </Button>
+                                <Button onClick={handleUpdateItem}>Sauvegarder</Button>
+                            </div>
+                        </div>
+                    )}
+                </DialogContent>
+            </Dialog>
 
             {filteredItems.length === 0 && (
                 <Card>

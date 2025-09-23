@@ -58,23 +58,38 @@ function HomePageContent() {
         <main className="container mx-auto px-4 py-6">
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
             <TabsList className="grid w-full grid-cols-5 mb-6">
-              <TabsTrigger value="dashboard" className="flex items-center gap-2">
+              <TabsTrigger
+                  value="dashboard"
+                  className="flex items-center gap-2 cursor-pointer transition-all duration-200 hover:bg-primary/10 hover:text-primary hover:scale-105 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+              >
                 <Home className="w-4 h-4" />
                 Tableau de bord
               </TabsTrigger>
-              <TabsTrigger value="users" className="flex items-center gap-2">
+              <TabsTrigger
+                  value="users"
+                  className="flex items-center gap-2 cursor-pointer transition-all duration-200 hover:bg-primary/10 hover:text-primary hover:scale-105 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+              >
                 <Users className="w-4 h-4" />
                 Utilisateurs
               </TabsTrigger>
-              <TabsTrigger value="rooms" className="flex items-center gap-2">
+              <TabsTrigger
+                  value="rooms"
+                  className="flex items-center gap-2 cursor-pointer transition-all duration-200 hover:bg-primary/10 hover:text-primary hover:scale-105 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+              >
                 <Package className="w-4 h-4" />
                 Pièces
               </TabsTrigger>
-              <TabsTrigger value="inventory" className="flex items-center gap-2">
+              <TabsTrigger
+                  value="inventory"
+                  className="flex items-center gap-2 cursor-pointer transition-all duration-200 hover:bg-primary/10 hover:text-primary hover:scale-105 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+              >
                 <Package className="w-4 h-4" />
                 Stocks
               </TabsTrigger>
-              <TabsTrigger value="plants" className="flex items-center gap-2">
+              <TabsTrigger
+                  value="plants"
+                  className="flex items-center gap-2 cursor-pointer transition-all duration-200 hover:bg-primary/10 hover:text-primary hover:scale-105 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+              >
                 <Leaf className="w-4 h-4" />
                 Plantes
               </TabsTrigger>

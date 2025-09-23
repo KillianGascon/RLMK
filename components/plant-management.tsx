@@ -104,21 +104,6 @@ export function PlantManagement() {
             lightRequirement: "high",
             status: "healthy",
         },
-        {
-            id: "4",
-            name: "Pothos",
-            species: "Epipremnum aureum",
-            location: "Chambre - Suspension",
-            plantedDate: "2024-09-05",
-            lastWatered: "2024-12-20",
-            wateringFrequency: 5,
-            optimalHumidity: { min: 40, max: 60 },
-            optimalTemperature: { min: 17, max: 26 },
-            currentHumidity: 30,
-            currentTemperature: 19,
-            lightRequirement: "low",
-            status: "needs_attention",
-        },
     ])
 
     // Données simulées pour les graphiques d'humidité
@@ -164,6 +149,9 @@ export function PlantManagement() {
         notes: "",
     })
 
+    const [editingPlant, setEditingPlant] = useState<Plant | null>(null)
+    const [isEditPlantOpen, setIsEditPlantOpen] = useState(false)
+
     const handleAddPlant = () => {
         if (newPlant.name && newPlant.species) {
             const plant: Plant = {
@@ -188,6 +176,38 @@ export function PlantManagement() {
             })
             setIsAddPlantOpen(false)
         }
+    }
+
+    const handleWaterPlant = (plantId: string) => {
+        setPlants(
+            plants.map((plant) =>
+                plant.id === plantId
+                    ? {
+                        ...plant,
+                        lastWatered: new Date().toISOString().split("T")[0],
+                        status: plant.status === "needs_water" ? "healthy" : plant.status,
+                        currentHumidity: Math.min(plant.currentHumidity + 20, 100), // Simulate humidity increase
+                    }
+                    : plant,
+            ),
+        )
+    }
+
+    const handleEditPlant = (plant: Plant) => {
+        setEditingPlant(plant)
+        setIsEditPlantOpen(true)
+    }
+
+    const handleUpdatePlant = () => {
+        if (editingPlant) {
+            setPlants(plants.map((plant) => (plant.id === editingPlant.id ? editingPlant : plant)))
+            setEditingPlant(null)
+            setIsEditPlantOpen(false)
+        }
+    }
+
+    const handleDeletePlant = (plantId: string) => {
+        setPlants(plants.filter((plant) => plant.id !== plantId))
     }
 
     const getStatusColor = (status: string) => {
@@ -327,6 +347,182 @@ export function PlantManagement() {
                         </div>
                     </DialogContent>
                 </Dialog>
+
+                {/* Edit Plant Dialog */}
+                <Dialog open={isEditPlantOpen} onOpenChange={setIsEditPlantOpen}>
+                    <DialogContent className="max-w-2xl">
+                        <DialogHeader>
+                            <DialogTitle>Modifier la plante</DialogTitle>
+                            <DialogDescription>Modifiez les paramètres de votre plante</DialogDescription>
+                        </DialogHeader>
+                        {editingPlant && (
+                            <div className="space-y-6">
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div className="space-y-2">
+                                        <Label htmlFor="editName">Nom de la plante</Label>
+                                        <Input
+                                            id="editName"
+                                            value={editingPlant.name}
+                                            onChange={(e) => setEditingPlant({ ...editingPlant, name: e.target.value })}
+                                        />
+                                    </div>
+
+                                    <div className="space-y-2">
+                                        <Label htmlFor="editSpecies">Espèce</Label>
+                                        <Input
+                                            id="editSpecies"
+                                            value={editingPlant.species}
+                                            onChange={(e) => setEditingPlant({ ...editingPlant, species: e.target.value })}
+                                        />
+                                    </div>
+                                </div>
+
+                                <div className="space-y-2">
+                                    <Label htmlFor="editLocation">Emplacement</Label>
+                                    <Input
+                                        id="editLocation"
+                                        value={editingPlant.location}
+                                        onChange={(e) => setEditingPlant({ ...editingPlant, location: e.target.value })}
+                                    />
+                                </div>
+
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div className="space-y-2">
+                                        <Label htmlFor="editWateringFreq">Fréquence d'arrosage (jours)</Label>
+                                        <Input
+                                            id="editWateringFreq"
+                                            type="number"
+                                            value={editingPlant.wateringFrequency}
+                                            onChange={(e) =>
+                                                setEditingPlant({ ...editingPlant, wateringFrequency: Number.parseInt(e.target.value) || 7 })
+                                            }
+                                        />
+                                    </div>
+
+                                    <div className="space-y-2">
+                                        <Label htmlFor="editLightReq">Besoin en lumière</Label>
+                                        <Select
+                                            value={editingPlant.lightRequirement}
+                                            onValueChange={(value: Plant["lightRequirement"]) =>
+                                                setEditingPlant({ ...editingPlant, lightRequirement: value })
+                                            }
+                                        >
+                                            <SelectTrigger>
+                                                <SelectValue />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                <SelectItem value="low">Faible</SelectItem>
+                                                <SelectItem value="medium">Moyen</SelectItem>
+                                                <SelectItem value="high">Élevé</SelectItem>
+                                            </SelectContent>
+                                        </Select>
+                                    </div>
+                                </div>
+
+                                <div className="space-y-4">
+                                    <Label>Conditions optimales</Label>
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div className="space-y-2">
+                                            <Label className="text-sm">Humidité (%)</Label>
+                                            <div className="flex gap-2">
+                                                <Input
+                                                    type="number"
+                                                    placeholder="Min"
+                                                    value={editingPlant.optimalHumidity.min}
+                                                    onChange={(e) =>
+                                                        setEditingPlant({
+                                                            ...editingPlant,
+                                                            optimalHumidity: {
+                                                                ...editingPlant.optimalHumidity,
+                                                                min: Number.parseInt(e.target.value) || 0,
+                                                            },
+                                                        })
+                                                    }
+                                                />
+                                                <Input
+                                                    type="number"
+                                                    placeholder="Max"
+                                                    value={editingPlant.optimalHumidity.max}
+                                                    onChange={(e) =>
+                                                        setEditingPlant({
+                                                            ...editingPlant,
+                                                            optimalHumidity: {
+                                                                ...editingPlant.optimalHumidity,
+                                                                max: Number.parseInt(e.target.value) || 100,
+                                                            },
+                                                        })
+                                                    }
+                                                />
+                                            </div>
+                                        </div>
+
+                                        <div className="space-y-2">
+                                            <Label className="text-sm">Température (°C)</Label>
+                                            <div className="flex gap-2">
+                                                <Input
+                                                    type="number"
+                                                    placeholder="Min"
+                                                    value={editingPlant.optimalTemperature.min}
+                                                    onChange={(e) =>
+                                                        setEditingPlant({
+                                                            ...editingPlant,
+                                                            optimalTemperature: {
+                                                                ...editingPlant.optimalTemperature,
+                                                                min: Number.parseInt(e.target.value) || 0,
+                                                            },
+                                                        })
+                                                    }
+                                                />
+                                                <Input
+                                                    type="number"
+                                                    placeholder="Max"
+                                                    value={editingPlant.optimalTemperature.max}
+                                                    onChange={(e) =>
+                                                        setEditingPlant({
+                                                            ...editingPlant,
+                                                            optimalTemperature: {
+                                                                ...editingPlant.optimalTemperature,
+                                                                max: Number.parseInt(e.target.value) || 40,
+                                                            },
+                                                        })
+                                                    }
+                                                />
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div className="space-y-2">
+                                    <Label htmlFor="editNotes">Notes</Label>
+                                    <Input
+                                        id="editNotes"
+                                        value={editingPlant.notes || ""}
+                                        onChange={(e) => setEditingPlant({ ...editingPlant, notes: e.target.value })}
+                                        placeholder="Notes sur l'entretien..."
+                                    />
+                                </div>
+
+                                <div className="flex justify-between">
+                                    <Button
+                                        variant="destructive"
+                                        onClick={() => {
+                                            handleDeletePlant(editingPlant.id)
+                                            setIsEditPlantOpen(false)
+                                        }}
+                                    >
+                                        Supprimer la plante
+                                    </Button>
+                                    <div className="flex gap-2">
+                                        <Button variant="outline" onClick={() => setIsEditPlantOpen(false)}>
+                                            Annuler
+                                        </Button>
+                                        <Button onClick={handleUpdatePlant}>Sauvegarder</Button>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+                    </DialogContent>
+                </Dialog>
             </div>
 
             {/* Stats Cards */}
@@ -461,11 +657,16 @@ export function PlantManagement() {
                                     </div>
 
                                     <div className="flex gap-2">
-                                        <Button size="sm" variant="outline" className="flex-1 bg-transparent">
+                                        <Button
+                                            size="sm"
+                                            variant="outline"
+                                            className="flex-1 bg-transparent"
+                                            onClick={() => handleWaterPlant(plant.id)}
+                                        >
                                             <Droplets className="h-4 w-4 mr-2" />
                                             Arroser
                                         </Button>
-                                        <Button size="sm" variant="outline">
+                                        <Button size="sm" variant="outline" onClick={() => handleEditPlant(plant)}>
                                             <Settings className="h-4 w-4" />
                                         </Button>
                                     </div>

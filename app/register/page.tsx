@@ -1,15 +1,13 @@
 "use client"
 
 import type React from "react"
-
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Alert, AlertDescription } from "@/components/ui/alert"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Home, Eye, EyeOff } from "lucide-react"
+import { Eye, EyeOff, Home } from "lucide-react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 
@@ -37,8 +35,7 @@ export default function RegisterPage() {
         setError("")
         setIsLoading(true)
 
-        // Validation
-        if (!formData.firstName || !formData.lastName || !formData.email || !formData.password || !formData.role) {
+        if (!formData.firstName || !formData.lastName || !formData.email || !formData.password) {
             setError("Veuillez remplir tous les champs")
             setIsLoading(false)
             return
@@ -56,14 +53,29 @@ export default function RegisterPage() {
             return
         }
 
-        // Simulation d'inscription
-        setTimeout(() => {
-            localStorage.setItem("isAuthenticated", "true")
-            localStorage.setItem("userEmail", formData.email)
-            localStorage.setItem("userName", `${formData.firstName} ${formData.lastName}`)
-            localStorage.setItem("userRole", formData.role)
-            router.push("/")
-        }, 1000)
+        try {
+            const res = await fetch("/api/register", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(formData),
+            })
+
+            const data = await res.json()
+
+            console.info(data)
+
+
+            if (!res.ok) {
+                setError(data.error || "Une erreur est survenue")
+            } else {
+                router.push("/login")
+            }
+        } catch (err) {
+            console.error(err)
+            setError("Erreur de connexion au serveur")
+        } finally {
+            setIsLoading(false)
+        }
     }
 
     return (
@@ -117,21 +129,6 @@ export default function RegisterPage() {
                                 onChange={(e) => handleInputChange("email", e.target.value)}
                                 required
                             />
-                        </div>
-
-                        <div className="space-y-2">
-                            <Label htmlFor="role">Rôle dans le foyer</Label>
-                            <Select value={formData.role} onValueChange={(value) => handleInputChange("role", value)}>
-                                <SelectTrigger>
-                                    <SelectValue placeholder="Sélectionnez votre rôle" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value="admin">Administrateur</SelectItem>
-                                    <SelectItem value="parent">Parent</SelectItem>
-                                    <SelectItem value="enfant">Enfant</SelectItem>
-                                    <SelectItem value="invite">Invité</SelectItem>
-                                </SelectContent>
-                            </Select>
                         </div>
 
                         <div className="space-y-2">

@@ -269,7 +269,7 @@ export function RoomManagement() {
             {/* Rooms Grid */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4">
                 {rooms.map((room) => (
-                    <Card key={room.id} className="hover:shadow-md transition-shadow">
+                    <Card key={room.id}>
                         <CardHeader className="pb-3">
                             <div className="flex items-center justify-between">
                                 <div className="flex items-center gap-2 md:gap-3">

@@ -514,9 +514,9 @@ export function FoodInventory() {
                 {filteredItems.map((item) => (
                     <Card
                         key={item.id}
-                        className={`hover:shadow-md transition-shadow ${
+                        className={`${
                             isExpired(item.expiryDate)
-                                ? "border-red-200 bg-red-50"
+                                ? "border-red-200 bg-red-50 hover:outline-1 hover:outline-red-200"
                                 : isExpiringSoon(item.expiryDate)
                                     ? "border-orange-200 bg-orange-50"
                                     : isLowStock(item)

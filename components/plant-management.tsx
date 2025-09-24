@@ -253,12 +253,14 @@ export function PlantManagement() {
     const healthyCount = plants.filter((p) => p.status === "healthy").length
 
     return (
-        <div className="space-y-6">
+        <div className="space-y-4 md:space-y-6">
             {/* Header */}
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div>
-                    <h2 className="text-2xl font-bold">Gestion des plantes</h2>
-                    <p className="text-muted-foreground">Surveillez la santé de vos plantes avec des données en temps réel</p>
+                    <h2 className="text-xl md:text-2xl font-bold">Gestion des plantes</h2>
+                    <p className="text-sm md:text-base text-muted-foreground">
+                      Surveillez la santé de vos plantes avec des données en temps réel
+                    </p>
                 </div>
 
                 <Dialog open={isAddPlantOpen} onOpenChange={setIsAddPlantOpen}>
@@ -526,7 +528,7 @@ export function PlantManagement() {
             </div>
 
             {/* Stats Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
                 <Card>
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                         <CardTitle className="text-sm font-medium">Total plantes</CardTitle>
@@ -573,16 +575,16 @@ export function PlantManagement() {
             </div>
 
             <Tabs defaultValue="overview" className="w-full">
-                <TabsList className="grid w-full grid-cols-2">
-                    <TabsTrigger value="overview">Vue d'ensemble</TabsTrigger>
-                    <TabsTrigger value="analytics">Graphiques & Analyses</TabsTrigger>
+                <TabsList className="grid w-full h-auto gap-1 grid-cols-2">
+                    <TabsTrigger className="hover:bg-card rounded-md" value="overview">Vue d'ensemble</TabsTrigger>
+                    <TabsTrigger className="hover:bg-card rounded-md" value="analytics">Graphiques & Analyses</TabsTrigger>
                 </TabsList>
 
                 <TabsContent value="overview" className="space-y-6">
                     {/* Plants Grid */}
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                         {plants.map((plant) => (
-                            <Card key={plant.id} className="hover:shadow-md transition-shadow">
+                            <Card key={plant.id}>
                                 <CardHeader className="pb-3">
                                     <div className="flex items-center justify-between">
                                         <div className="flex items-center gap-3">

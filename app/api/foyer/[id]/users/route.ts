@@ -1,23 +1,23 @@
 import { prisma } from "@/lib/prisma"
 import { NextResponse } from "next/server"
 
-type Params = {
-    params: { id: string }
-}
-
 // 🔹 Récupérer tous les utilisateurs d’un foyer (avec leur rôle)
-export async function GET(req: Request, { params }: Params) {
+export async function GET(
+    req: Request,
+    context: { params: { id: string } }
+) {
     try {
-        const foyerId = parseInt(params.id, 10)
+        const foyerId = parseInt(context.params.id, 10)
+
+        if (isNaN(foyerId)) {
+            return NextResponse.json({ error: "ID du foyer invalide" }, { status: 400 })
+        }
 
         const users = await prisma.utilisateur_Foyer.findMany({
             where: { Id_Foyer: foyerId },
-            include: {
-                Utilisateur: true,
-            },
+            include: { Utilisateur: true },
         })
 
-        // 🔹 Nettoyage du retour pour le front
         const formatted = users.map((u) => ({
             id: u.Utilisateur.id,
             name: `${u.Utilisateur.Prenom_Utilisateur} ${u.Utilisateur.Nom_Utilisateur}`,
@@ -34,9 +34,17 @@ export async function GET(req: Request, { params }: Params) {
 }
 
 // 🔹 Ajouter un utilisateur au foyer avec son rôle
-export async function POST(req: Request, { params }: Params) {
+export async function POST(
+    req: Request,
+    context: { params: { id: string } }
+) {
     try {
-        const foyerId = parseInt(params.id, 10)
+        const foyerId = parseInt(context.params.id, 10)
+
+        if (isNaN(foyerId)) {
+            return NextResponse.json({ error: "ID du foyer invalide" }, { status: 400 })
+        }
+
         const body = await req.json()
         const { userId, role } = body
 
@@ -48,7 +56,7 @@ export async function POST(req: Request, { params }: Params) {
             data: {
                 Id_Utilisateur: userId,
                 Id_Foyer: foyerId,
-                Role: role || "member", // 🔹 rôle par défaut : member
+                Role: role && ["admin", "member"].includes(role) ? role : "member",
             },
         })
 

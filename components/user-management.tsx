@@ -5,18 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import {
-    Dialog,
-    DialogContent,
-    DialogDescription,
-    DialogHeader,
-    DialogTitle,
-    DialogTrigger,
-} from "@/components/ui/dialog"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Plus, Mail, Phone, Settings, UserCheck, Crown } from "lucide-react"
+import { Mail, Phone, Settings, UserCheck, Crown, Trash2 } from "lucide-react"
 
 interface User {
     id: number
@@ -29,16 +18,12 @@ interface User {
 
 export function UserManagement({ foyerId }: { foyerId: number }) {
     const [users, setUsers] = useState<User[]>([])
-    const [isAddUserOpen, setIsAddUserOpen] = useState(false)
-    const [newUser, setNewUser] = useState({
-        email: "",
-        role: "member" as "admin" | "member",
-    })
+    const [currentUserRole, setCurrentUserRole] = useState<"admin" | "member">("member")
 
     // 🔹 Charger les utilisateurs du foyer
     useEffect(() => {
         const fetchUsers = async () => {
-            const res = await fetch(`/api/foyer/1/users`)
+            const res = await fetch(`/api/foyer/${foyerId}/users`)
             const data = await res.json()
 
             const mapped: User[] = data.map((u: any) => ({
@@ -50,34 +35,40 @@ export function UserManagement({ foyerId }: { foyerId: number }) {
                 joinDate: new Date().toISOString().split("T")[0],
             }))
 
+
             setUsers(mapped)
+
+            // rôle de l'utilisateur connecté (ex: stocké en localStorage)
+            const role = localStorage.getItem("userRole") as "admin" | "member" | null
+            if (role) setCurrentUserRole(role)
         }
 
         fetchUsers()
     }, [foyerId])
 
-
-    // 🔹 Ajouter un utilisateur dans le foyer
-    const handleAddUser = async () => {
-        if (!newUser.email) return
-
-        const res = await fetch(`/api/foyers/${foyerId}/users`, {
-            method: "POST",
+    // 🔹 Modifier le rôle
+    const handleRoleChange = async (userId: number, newRole: "admin" | "member") => {
+        const res = await fetch(`/api/foyer/${foyerId}/users/${userId}/role`, {
+            method: "PUT",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-                userId: 1, // ⚠️ ici tu devras récupérer l'ID de l'utilisateur via un SELECT sur son email
-                role: newUser.role,
-            }),
+            body: JSON.stringify({ role: newRole }),
         })
 
         if (res.ok) {
-            setIsAddUserOpen(false)
-            setNewUser({ email: "", role: "member" })
-            // Recharge les users
-            const data = await res.json()
-            console.log("✅ Utilisateur ajouté:", data)
-        } else {
-            console.error("❌ Erreur lors de l’ajout")
+            setUsers((prev) =>
+                prev.map((u) => (u.id === userId ? { ...u, role: newRole } : u))
+            )
+        }
+    }
+
+    // 🔹 Supprimer un utilisateur
+    const handleDelete = async (userId: number) => {
+        const res = await fetch(`/api/foyer/${foyerId}/users/${userId}`, {
+            method: "DELETE",
+        })
+
+        if (res.ok) {
+            setUsers((prev) => prev.filter((u) => u.id !== userId))
         }
     }
 
@@ -95,7 +86,6 @@ export function UserManagement({ foyerId }: { foyerId: number }) {
 
     return (
         <div className="space-y-4 md:space-y-6">
-            {/* Header */}
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div>
                     <h2 className="text-xl md:text-2xl font-bold">Gestion des utilisateurs</h2>
@@ -113,7 +103,6 @@ export function UserManagement({ foyerId }: { foyerId: number }) {
                             <div className="flex items-center justify-between">
                                 <div className="flex items-center gap-2 md:gap-3">
                                     <Avatar className="w-8 h-8 md:w-10 md:h-10">
-                                        {/*<AvatarImage src={user.avatar || "/placeholder.svg"} />*/}
                                         <AvatarFallback className="text-xs md:text-sm">
                                             {user.name.split(" ").map((n) => n[0]).join("")}
                                         </AvatarFallback>
@@ -126,6 +115,29 @@ export function UserManagement({ foyerId }: { foyerId: number }) {
                                         </div>
                                     </div>
                                 </div>
+
+                                {/* Icônes actions seulement si admin */}
+                                {currentUserRole === "admin" && (
+                                    <div className="flex gap-2">
+                                        <Button
+                                            variant="ghost"
+                                            size="sm"
+                                            onClick={() =>
+                                                handleRoleChange(user.id, user.role === "admin" ? "member" : "admin")
+                                            }
+                                        >
+                                            <Settings className="h-4 w-4" />
+                                        </Button>
+                                        <Button
+                                            variant="ghost"
+                                            size="sm"
+                                            onClick={() => handleDelete(user.id)}
+                                            className="text-red-500 hover:text-red-700"
+                                        >
+                                            <Trash2 className="h-4 w-4" />
+                                        </Button>
+                                    </div>
+                                )}
                             </div>
                         </CardHeader>
                         <CardContent className="space-y-2 md:space-y-3">
@@ -139,14 +151,8 @@ export function UserManagement({ foyerId }: { foyerId: number }) {
                                     <span>{user.phone}</span>
                                 </div>
                             )}
-                            <div className="flex items-center justify-between pt-2 border-t">
-                <span className="text-xs text-muted-foreground">
-                  <span className="hidden sm:inline">Rejoint le </span>
-                    {new Date(user.joinDate).toLocaleDateString("fr-FR")}
-                </span>
-                                <Button variant="ghost" size="sm">
-                                    <Settings className="h-3 w-3 md:h-4 md:w-4" />
-                                </Button>
+                            <div className="pt-2 border-t text-xs text-muted-foreground">
+                                Rejoint le {new Date(user.joinDate).toLocaleDateString("fr-FR")}
                             </div>
                         </CardContent>
                     </Card>

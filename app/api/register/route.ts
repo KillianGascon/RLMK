@@ -40,7 +40,7 @@ export async function POST(req: Request) {
         const existingFoyer = await prisma.foyer.findFirst()
 
         let foyerId: number
-        let role: "admin" | "member"
+        let role: "admin" | "invite"
 
         if (!existingFoyer) {
             // Premier utilisateur => créer un foyer
@@ -52,7 +52,7 @@ export async function POST(req: Request) {
         } else {
             // Foyer déjà existant => membre simple
             foyerId = existingFoyer.id
-            role = "member"
+            role = "invite"
         }
 
         // Associer l’utilisateur au foyer avec un rôle

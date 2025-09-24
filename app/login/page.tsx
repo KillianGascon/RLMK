@@ -1,7 +1,6 @@
 "use client"
 
 import type React from "react"
-
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -25,17 +24,41 @@ export default function LoginPage() {
         setError("")
         setIsLoading(true)
 
-        // Simulation de connexion
-        if (email && password) {
-            // Stocker l'état de connexion dans localStorage
-            localStorage.setItem("isAuthenticated", "true")
-            localStorage.setItem("userEmail", email)
-            router.push("/")
-        } else {
-            setError("Veuillez remplir tous les champs")
-        }
+        try {
+            const res = await fetch("/api/login", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ email, password }),
+            })
 
-        setIsLoading(false)
+            const data = await res.json()
+
+            if (!res.ok) {
+                setError(data.error || "Échec de la connexion")
+                setIsLoading(false)
+                return
+            }
+
+            // Stocker les infos utilisateur
+            localStorage.setItem("isAuthenticated", "true")
+            localStorage.setItem("token", data.token)
+            localStorage.setItem("userEmail", data.user.email)
+            localStorage.setItem("userName", data.user.name)
+            localStorage.setItem("userRole", data.user.role)
+
+            // 🔹 Stocker les foyers disponibles
+            if (data.user.foyers) {
+                localStorage.setItem("userFoyers", JSON.stringify(data.user.foyers))
+            }
+
+            // 🔹 Rediriger vers la sélection de foyer
+            router.push("/foyer")
+        } catch (err) {
+            console.error("❌ Erreur frontend:", err)
+            setError("Erreur serveur, réessayez plus tard.")
+        } finally {
+            setIsLoading(false)
+        }
     }
 
     return (

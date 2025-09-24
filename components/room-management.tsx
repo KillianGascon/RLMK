@@ -25,7 +25,7 @@ interface Room {
     description?: string
     temperature?: number
     devices: string[]
-    area: number // en m²
+    area: number
     hasWifi: boolean
     hasLighting: boolean
 }

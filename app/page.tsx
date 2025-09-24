@@ -133,7 +133,7 @@ function HomePageContent() {
                 </TabsContent>
 
                 <TabsContent value="rooms">
-                  <RoomManagement />
+                  <RoomManagement foyerId={foyerId}/>
                 </TabsContent>
 
                 <TabsContent value="inventory">

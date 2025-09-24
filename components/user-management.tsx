@@ -6,6 +6,15 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Mail, Phone, Settings, UserCheck, Crown, Trash2 } from "lucide-react"
+import {
+    Dialog,
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
+    DialogDescription,
+    DialogFooter,
+} from "@/components/ui/dialog"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 
 interface User {
     id: number
@@ -19,6 +28,9 @@ interface User {
 export function UserManagement({ foyerId }: { foyerId: number }) {
     const [users, setUsers] = useState<User[]>([])
     const [currentUserRole, setCurrentUserRole] = useState<"admin" | "member">("member")
+
+    const [selectedUser, setSelectedUser] = useState<User | null>(null)
+    const [newRole, setNewRole] = useState<"admin" | "member">("member")
 
     // 🔹 Charger les utilisateurs du foyer
     useEffect(() => {
@@ -35,10 +47,8 @@ export function UserManagement({ foyerId }: { foyerId: number }) {
                 joinDate: new Date().toISOString().split("T")[0],
             }))
 
-
             setUsers(mapped)
 
-            // rôle de l'utilisateur connecté (ex: stocké en localStorage)
             const role = localStorage.getItem("userRole") as "admin" | "member" | null
             if (role) setCurrentUserRole(role)
         }
@@ -46,9 +56,10 @@ export function UserManagement({ foyerId }: { foyerId: number }) {
         fetchUsers()
     }, [foyerId])
 
-    // 🔹 Modifier le rôle
-    const handleRoleChange = async (userId: number, newRole: "admin" | "member") => {
-        const res = await fetch(`/api/foyer/${foyerId}/users/${userId}/role`, {
+    // 🔹 Modifier le rôle (API + mise à jour locale)
+    const handleRoleChange = async () => {
+        if (!selectedUser) return
+        const res = await fetch(`/api/foyer/${foyerId}/users/${selectedUser.id}`, {
             method: "PUT",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ role: newRole }),
@@ -56,8 +67,9 @@ export function UserManagement({ foyerId }: { foyerId: number }) {
 
         if (res.ok) {
             setUsers((prev) =>
-                prev.map((u) => (u.id === userId ? { ...u, role: newRole } : u))
+                prev.map((u) => (u.id === selectedUser.id ? { ...u, role: newRole } : u))
             )
+            setSelectedUser(null) // fermer la popup
         }
     }
 
@@ -116,18 +128,22 @@ export function UserManagement({ foyerId }: { foyerId: number }) {
                                     </div>
                                 </div>
 
-                                {/* Icônes actions seulement si admin */}
-                                {currentUserRole === "admin" && (
+                                {/* Icônes actions seulement si admin et pas soi-même */}
+                                {currentUserRole === "admin" && localStorage.getItem("userEmail") !== user.email && (
                                     <div className="flex gap-2">
+                                        {/* Bouton ouvrir popup modification */}
                                         <Button
                                             variant="ghost"
                                             size="sm"
-                                            onClick={() =>
-                                                handleRoleChange(user.id, user.role === "admin" ? "member" : "admin")
-                                            }
+                                            onClick={() => {
+                                                setSelectedUser(user)
+                                                setNewRole(user.role ?? "member")
+                                            }}
                                         >
                                             <Settings className="h-4 w-4" />
                                         </Button>
+
+                                        {/* Bouton supprimer */}
                                         <Button
                                             variant="ghost"
                                             size="sm"
@@ -158,6 +174,35 @@ export function UserManagement({ foyerId }: { foyerId: number }) {
                     </Card>
                 ))}
             </div>
+
+            {/* Popup modification rôle */}
+            <Dialog open={!!selectedUser} onOpenChange={() => setSelectedUser(null)}>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>Modifier le rôle</DialogTitle>
+                        <DialogDescription>
+                            Choisissez un nouveau rôle pour {selectedUser?.name}.
+                        </DialogDescription>
+                    </DialogHeader>
+
+                    <Select value={newRole} onValueChange={(v: "admin" | "member") => setNewRole(v)}>
+                        <SelectTrigger>
+                            <SelectValue placeholder="Sélectionnez un rôle" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="admin">Administrateur</SelectItem>
+                            <SelectItem value="member">Membre</SelectItem>
+                        </SelectContent>
+                    </Select>
+
+                    <DialogFooter>
+                        <Button variant="outline" onClick={() => setSelectedUser(null)}>
+                            Annuler
+                        </Button>
+                        <Button onClick={handleRoleChange}>Sauvegarder</Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
         </div>
     )
 }

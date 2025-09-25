@@ -24,6 +24,7 @@ export async function GET() {
                 lightRequirement: p.Besoin_Lumiere.toLowerCase() as "low" | "medium" | "high",
                 status: "healthy",
                 notes: p.Description_Plante ?? "",
+                Id_ESP32: p.Id_ESP32 ?? null,
             }
         })
 

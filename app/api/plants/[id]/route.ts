@@ -35,6 +35,7 @@ export async function GET(req: Request, { params }: Params) {
             lightRequirement: p.Besoin_Lumiere.toLowerCase() as "low" | "medium" | "high",
             status: "healthy",
             notes: p.Description_Plante ?? "",
+            Id_ESP32: p.Id_ESP32 ?? null,
         }
 
         // Return formatted plant data as JSON
@@ -49,12 +50,27 @@ export async function GET(req: Request, { params }: Params) {
 // 🟡 PUT update plant by ID
 export async function PUT(req: Request, { params }: Params) {
     try {
-        // Parse plant ID from route parameters
         const plantId = parseInt(params.id)
-        // Parse request body for updated plant data
         const body = await req.json()
 
-        // Update plant in database
+        // ⚡ Vérifier si un autre plant utilise déjà cet ESP32
+        if (body.Id_ESP32) {
+            const existing = await prisma.plante.findFirst({
+                where: {
+                    Id_ESP32: body.Id_ESP32,
+                    NOT: { id: plantId }, // exclure la plante en cours d’édition
+                },
+            })
+
+            if (existing) {
+                return NextResponse.json(
+                    { error: `ESP32 #${body.Id_ESP32} is already linked to another plant (id ${existing.id})` },
+                    { status: 400 }
+                )
+            }
+        }
+
+        // 🔄 Update plant
         const updated = await prisma.plante.update({
             where: { id: plantId },
             data: {
@@ -67,17 +83,17 @@ export async function PUT(req: Request, { params }: Params) {
                 Date_Plantation: body.plantedDate ? new Date(body.plantedDate) : null,
                 Humidite_Optimale: body.optimalHumidity ?? null,
                 Temperature_Optimale: body.optimalTemperature ?? null,
+                Id_ESP32: body.Id_ESP32 ?? null, // associer l’ESP32
             },
         })
 
-        // Return updated plant data as JSON
         return NextResponse.json(updated)
     } catch (err) {
-        // Log and return server error
         console.error("Error PUT /api/plants/[id]:", err)
         return NextResponse.json({ error: "Server error" }, { status: 500 })
     }
 }
+
 
 // 🔴 DELETE plant by ID
 export async function DELETE(req: Request, { params }: Params) {

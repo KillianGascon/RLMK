@@ -49,13 +49,31 @@ export async function POST(req: Request) {
                 Besoin_Lumiere: body.lightRequirement,
                 Description_Plante: body.notes ?? null,
                 Date_Plantation: body.plantedDate ? new Date(body.plantedDate) : new Date(),
-                Id_Foyer: 1, // todo: A adapter
+                Id_Foyer: body.foyerId,
                 Humidite_Optimale: body.optimalHumidity ?? null,
                 Temperature_Optimale: body.optimalTemperature ?? null,
             },
         })
 
-        return NextResponse.json(newPlant)
+        // 🟢 Format identique au GET
+        const formatted = {
+            id: newPlant.id.toString(),
+            name: newPlant.Nom_Plante,
+            species: newPlant.Espece,
+            location: newPlant.Emplacement,
+            plantedDate: newPlant.Date_Plantation?.toISOString() ?? "",
+            lastWatered: "",
+            wateringFrequency: parseInt(newPlant.Frequence_Arrosage) || 7,
+            optimalHumidity: newPlant.Humidite_Optimale ?? 50,
+            optimalTemperature: newPlant.Temperature_Optimale ?? 22,
+            currentHumidity: 50,
+            currentTemperature: 22,
+            lightRequirement: newPlant.Besoin_Lumiere.toLowerCase() as "low" | "medium" | "high",
+            status: "healthy",
+            notes: newPlant.Description_Plante ?? "",
+        }
+
+        return NextResponse.json(formatted)
     } catch (err) {
         console.error("Erreur POST /api/plants:", err)
         return NextResponse.json({ error: "Erreur serveur" }, { status: 500 })

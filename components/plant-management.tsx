@@ -60,7 +60,7 @@ interface SensorData {
     light: number
 }
 
-export function PlantManagement() {
+export function PlantManagement({ foyerId }: { foyerId: number }) {
     const [plants, setPlants] = useState<Plant[]>([])
     const [loading, setLoading] = useState(true)
 
@@ -137,7 +137,10 @@ export function PlantManagement() {
             const res = await fetch("/api/plants", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(newPlant),
+                body: JSON.stringify({
+                    ...newPlant,
+                    foyerId, // 👈 on ajoute le foyer
+                }),
             })
             if (res.ok) {
                 const created = await res.json()

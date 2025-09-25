@@ -141,7 +141,7 @@ function HomePageContent() {
                 </TabsContent>
 
                 <TabsContent value="plants">
-                  <PlantManagement />
+                  <PlantManagement foyerId={foyerId}/>
                 </TabsContent>
               </Tabs>
           )}

@@ -55,6 +55,7 @@ export async function POST(req: Request) {
             },
         })
 
+
         // 🟢 Format identique au GET
         const formatted = {
             id: newPlant.id.toString(),

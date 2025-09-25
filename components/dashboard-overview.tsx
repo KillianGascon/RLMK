@@ -1,27 +1,41 @@
 "use client"
 
+import { useEffect, useState } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-// import { Progress } from "@/components/ui/progress"
 import { Users, Home, Package, Leaf, AlertTriangle, Droplets } from "lucide-react"
 
-export function DashboardOverview() {
-    // Données simulées
-    const stats = {
-        users: 4,
-        rooms: 8,
-        foodItems: 23,
-        plants: 6,
-        lowStockItems: 3,
-        plantsNeedingWater: 2,
-    }
+interface DashboardStats {
+    users: number
+    rooms: number
+    foodItems: number
+    plants: number
+    lowStockItems: number
+    plantsNeedingWater: number
+    recentActivity: { type: string; message: string; time: string }[]
+}
 
-    const recentActivity = [
-        { type: "food", message: "Lait ajouté au frigo", time: "Il y a 2h" },
-        { type: "plant", message: "Basilic arrosé", time: "Il y a 4h" },
-        { type: "user", message: "Marie a rejoint le foyer", time: "Hier" },
-        { type: "alert", message: "Stock de pain faible", time: "Hier" },
-    ]
+export function DashboardOverview() {
+    const [stats, setStats] = useState<DashboardStats | null>(null)
+    const [loading, setLoading] = useState(true)
+
+    useEffect(() => {
+        const fetchStats = async () => {
+            try {
+                const res = await fetch("/api/dashboard")
+                const data = await res.json()
+                setStats(data)
+            } catch (err) {
+                console.error("Erreur fetch dashboard:", err)
+            } finally {
+                setLoading(false)
+            }
+        }
+        fetchStats()
+    }, [])
+
+    if (loading) return <p>Chargement...</p>
+    if (!stats) return <p>Impossible de charger les données</p>
 
     return (
         <div className="space-y-6">
@@ -73,7 +87,7 @@ export function DashboardOverview() {
             </div>
 
             {/* Alerts and Status */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div className="w-full">
                 <Card>
                     <CardHeader>
                         <CardTitle className="flex items-center gap-2">
@@ -101,26 +115,6 @@ export function DashboardOverview() {
                             <Badge variant="secondary" className="bg-blue-100 text-blue-800">
                                 {stats.plantsNeedingWater} plantes
                             </Badge>
-                        </div>
-                    </CardContent>
-                </Card>
-
-                <Card>
-                    <CardHeader>
-                        <CardTitle>Activité récente</CardTitle>
-                        <CardDescription>Dernières actions dans le foyer</CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                        <div className="space-y-3">
-                            {recentActivity.map((activity, index) => (
-                                <div key={index} className="flex items-center gap-3 p-2 rounded-lg hover:bg-muted/50">
-                                    <div className="w-2 h-2 bg-primary rounded-full" />
-                                    <div className="flex-1">
-                                        <p className="text-sm font-medium">{activity.message}</p>
-                                        <p className="text-xs text-muted-foreground">{activity.time}</p>
-                                    </div>
-                                </div>
-                            ))}
                         </div>
                     </CardContent>
                 </Card>

@@ -13,7 +13,7 @@ export async function GET() {
             where: { Quantite: { lte: 2 } },
         })
 
-        // Exemple simplifié: plantes "à arroser" si fréquence = "quotidien"
+        // Exemple simplifié: plants "à arroser" si fréquence = "quotidien"
         const plantsNeedingWater = await prisma.plante.count({
             where: { Frequence_Arrosage: "quotidien" },
         })

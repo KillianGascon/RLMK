@@ -137,7 +137,7 @@ function HomePageContent() {
                 </TabsContent>
 
                 <TabsContent value="inventory">
-                  <FoodInventory />
+                  <FoodInventory foyerId={foyerId}/>
                 </TabsContent>
 
                 <TabsContent value="plants">

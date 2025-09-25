@@ -46,51 +46,64 @@ model ESP32 {
 model Foyer {
   id                Int                 @id @default(autoincrement())
   Nom_Foyer         String              @db.VarChar(100)
-  Piece_Foyer       Piece_Foyer[]
   Plante            Plante[]
   Stock             Stock[]
   Utilisateur_Foyer Utilisateur_Foyer[]
+  pieces  Piece[]
 }
 
 model Piece {
-  id                Int           @id @default(autoincrement())
-  Nom_Piece         String        @db.VarChar(100)
-  Description_Piece String?       @db.Text
-  Piece_Foyer       Piece_Foyer[]
+  id                Int      @id @default(autoincrement())
+  Nom_Piece         String
+  Description_Piece String?
+  Surface_m2        Decimal? @db.Decimal(6, 2)
+  Type_Piece        String
+  Id_Foyer          Int
+
+  stocks Stock[]
+  foyer             Foyer    @relation(fields: [Id_Foyer], references: [id])
 }
 
-model Piece_Foyer {
-  id       Int   @id @default(autoincrement())
-  Id_Piece Int
-  Id_Foyer Int
-  Piece    Piece @relation(fields: [Id_Piece], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "Piece_Foyer_ibfk_1")
-  Foyer    Foyer @relation(fields: [Id_Foyer], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "Piece_Foyer_ibfk_2")
+model Plante {
+  id                   Int       @id @default(autoincrement())
+  Nom_Plante           String    @db.VarChar(100)
+  Espece               String    @db.VarChar(100)
+  Emplacement          String    @db.VarChar(100)
+  Frequence_Arrosage   String    @db.VarChar(50)
+  Besoin_Lumiere       String    @db.VarChar(50)
+  Humidite_Optimale    Decimal?  @db.Decimal(5, 2)
+  Temperature_Optimale Decimal?  @db.Decimal(5, 2)
+  Note                 String?   @db.Text
+  Description_Plante   String?   @db.Text
+  Date_Plantation      DateTime? @db.Date
+  Id_Foyer             Int
+
+
+  // Relations
+  Foyer Foyer  @relation(fields: [Id_Foyer], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "Plante_ibfk_1")
+  ESP32 ESP32[]
+
+  @@index([Id_Foyer], map: "Id_Foyer")
+}
+
+
+model Stock {
+  id                Int       @id @default(autoincrement())
+  Nom_Stock         String    @db.VarChar(100)
+  Description_Stock String?   @db.Text
+  Type_Stock        String    @db.VarChar(50)
+  Id_Foyer          Int
+  Id_Piece          Int
+
+  // Relations
+  Aliment   Aliment[]
+  Foyer     Foyer @relation(fields: [Id_Foyer], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "Stock_ibfk_1")
+  Piece     Piece @relation(fields: [Id_Piece], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "Stock_ibfk_2")
 
   @@index([Id_Foyer], map: "Id_Foyer")
   @@index([Id_Piece], map: "Id_Piece")
 }
 
-model Plante {
-  id                 Int       @id @default(autoincrement())
-  Nom_Plante         String    @db.VarChar(100)
-  Description_Plante String?   @db.Text
-  Date_Plantation    DateTime? @db.Date
-  Id_Foyer           Int
-  ESP32              ESP32[]
-  Foyer              Foyer     @relation(fields: [Id_Foyer], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "Plante_ibfk_1")
-
-  @@index([Id_Foyer], map: "Id_Foyer")
-}
-
-model Stock {
-  id                Int       @id @default(autoincrement())
-  Emplacement_Stock String    @db.VarChar(100)
-  Id_Foyer          Int
-  Aliment           Aliment[]
-  Foyer             Foyer     @relation(fields: [Id_Foyer], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "Stock_ibfk_1")
-
-  @@index([Id_Foyer], map: "Id_Foyer")
-}
 
 model Utilisateur {
   id                      Int                 @id @default(autoincrement())
@@ -98,7 +111,6 @@ model Utilisateur {
   Prenom_Utilisateur      String              @db.VarChar(100)
   Identifiant_Utilisateur String              @unique(map: "Identifiant_Utilisateur") @db.VarChar(50)
   MotDePasse_Utilisateur  String              @db.VarChar(255)
-  Role_Utilisateur        String?              @db.VarChar(50)
   Email_Utilisateur       String              @unique(map: "Email_Utilisateur") @db.VarChar(100)
   Telephone_Utilisateur   String?             @db.VarChar(20)
   Utilisateur_Foyer       Utilisateur_Foyer[]
@@ -108,6 +120,8 @@ model Utilisateur_Foyer {
   id             Int         @id @default(autoincrement())
   Id_Utilisateur Int
   Id_Foyer       Int
+  Role           String?     @db.VarChar(50)
+
   Utilisateur    Utilisateur @relation(fields: [Id_Utilisateur], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "Utilisateur_Foyer_ibfk_1")
   Foyer          Foyer       @relation(fields: [Id_Foyer], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "Utilisateur_Foyer_ibfk_2")
 

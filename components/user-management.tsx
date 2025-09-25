@@ -1,191 +1,137 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
+import { Avatar, AvatarFallback } from "@/components/ui/avatar"
+import { Mail, Phone, Settings, UserCheck, Crown, Trash2 } from "lucide-react"
 import {
     Dialog,
     DialogContent,
-    DialogDescription,
     DialogHeader,
     DialogTitle,
-    DialogTrigger,
+    DialogDescription,
+    DialogFooter,
 } from "@/components/ui/dialog"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Plus, Mail, Phone, Settings, UserCheck, Crown } from "lucide-react"
 
+// --- User type definition ---
 interface User {
-    id: string
+    id: number
     name: string
     email: string
-    role: "admin" | "member"
-    avatar?: string
     phone?: string
+    role: "admin" | "member" | null
     joinDate: string
-    status: "active" | "inactive"
 }
 
-export function UserManagement() {
-    const [users, setUsers] = useState<User[]>([
-        {
-            id: "1",
-            name: "Jean Dupont",
-            email: "jean.dupont@email.com",
-            role: "admin",
-            phone: "+33 6 12 34 56 78",
-            joinDate: "2024-01-15",
-            status: "active",
-        },
-        {
-            id: "2",
-            name: "Marie Martin",
-            email: "marie.martin@email.com",
-            role: "member",
-            phone: "+33 6 98 76 54 32",
-            joinDate: "2024-02-20",
-            status: "active",
-        },
-        {
-            id: "3",
-            name: "Pierre Durand",
-            email: "pierre.durand@email.com",
-            role: "member",
-            joinDate: "2024-03-10",
-            status: "inactive",
-        },
-    ])
+export function UserManagement({ foyerId }: { foyerId: number }) {
+    // --- State: list of users ---
+    const [users, setUsers] = useState<User[]>([])
 
-    const [isAddUserOpen, setIsAddUserOpen] = useState(false)
-    const [newUser, setNewUser] = useState({
-        name: "",
-        email: "",
-        role: "member" as "admin" | "member",
-        phone: "",
-    })
+    // --- State: current logged-in user's role (default member) ---
+    const [currentUserRole, setCurrentUserRole] = useState<"admin" | "member">("member")
 
-    const handleAddUser = () => {
-        if (newUser.name && newUser.email) {
-            const user: User = {
-                id: Date.now().toString(),
-                ...newUser,
+    // --- State for role edit dialog ---
+    const [selectedUser, setSelectedUser] = useState<User | null>(null)
+    const [newRole, setNewRole] = useState<"admin" | "member">("member")
+
+    // 🔹 Fetch users for this foyer
+    useEffect(() => {
+        const fetchUsers = async () => {
+            const res = await fetch(`/api/foyer/${foyerId}/users`)
+            const data = await res.json()
+
+            // Map API response to User type
+            const mapped: User[] = data.map((u: any) => ({
+                id: u.id,
+                name: u.name,
+                email: u.email,
+                role: u.role as "admin" | "member" | null,
+                phone: u.phone || undefined,
+                // For now we assign current date as joinDate
                 joinDate: new Date().toISOString().split("T")[0],
-                status: "active",
-            }
-            setUsers([...users, user])
-            setNewUser({ name: "", email: "", role: "member", phone: "" })
-            setIsAddUserOpen(false)
+            }))
+
+            setUsers(mapped)
+
+            // Load role from localStorage (simulating current user role)
+            const role = localStorage.getItem("userRole") as "admin" | "member" | null
+            if (role) setCurrentUserRole(role)
+        }
+
+        fetchUsers()
+    }, [foyerId])
+
+    // 🔹 Change a user's role (API + local state update)
+    const handleRoleChange = async () => {
+        if (!selectedUser) return
+        const res = await fetch(`/api/foyer/${foyerId}/users/${selectedUser.id}`, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ role: newRole }),
+        })
+
+        if (res.ok) {
+            // Update local state
+            setUsers((prev) =>
+                prev.map((u) => (u.id === selectedUser.id ? { ...u, role: newRole } : u))
+            )
+            setSelectedUser(null) // close dialog
         }
     }
 
-    const getRoleIcon = (role: string) => {
+    // 🔹 Delete a user
+    const handleDelete = async (userId: number) => {
+        const res = await fetch(`/api/foyer/${foyerId}/users/${userId}`, {
+            method: "DELETE",
+        })
+
+        if (res.ok) {
+            // Remove user from local state
+            setUsers((prev) => prev.filter((u) => u.id !== userId))
+        }
+    }
+
+    // 🔹 Return role icon
+    const getRoleIcon = (role: string | null) => {
         return role === "admin" ? <Crown className="h-4 w-4" /> : <UserCheck className="h-4 w-4" />
     }
 
-    const getRoleBadge = (role: string) => {
+    // 🔹 Return role badge
+    const getRoleBadge = (role: string | null) => {
         return role === "admin" ? (
-            <Badge className="bg-purple-100 text-purple-800">Administrateur</Badge>
+            <Badge className="bg-purple-100 text-purple-800">Administrator</Badge>
         ) : (
-            <Badge variant="secondary">Membre</Badge>
+            <Badge variant="secondary">Member</Badge>
         )
     }
 
     return (
         <div className="space-y-4 md:space-y-6">
-            {/* Header */}
+            {/* --- Page Header --- */}
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div>
-                    <h2 className="text-xl md:text-2xl font-bold">Gestion des utilisateurs</h2>
+                    <h2 className="text-xl md:text-2xl font-bold">User Management</h2>
                     <p className="text-sm md:text-base text-muted-foreground">
-                        Gérez les membres de votre foyer et leurs permissions
+                        Manage your household members and their permissions
                     </p>
                 </div>
-
-                <Dialog open={isAddUserOpen} onOpenChange={setIsAddUserOpen}>
-                    <DialogTrigger asChild>
-                        <Button className="flex items-center gap-2 w-full sm:w-auto">
-                            <Plus className="h-4 w-4" />
-                            <span className="hidden sm:inline">Ajouter un utilisateur</span>
-                            <span className="sm:hidden">Ajouter</span>
-                        </Button>
-                    </DialogTrigger>
-                    <DialogContent>
-                        <DialogHeader>
-                            <DialogTitle>Ajouter un nouvel utilisateur</DialogTitle>
-                            <DialogDescription>Invitez un nouveau membre à rejoindre votre foyer</DialogDescription>
-                        </DialogHeader>
-                        <div className="space-y-4">
-                            <div className="space-y-2">
-                                <Label htmlFor="name">Nom complet</Label>
-                                <Input
-                                    id="name"
-                                    value={newUser.name}
-                                    onChange={(e) => setNewUser({ ...newUser, name: e.target.value })}
-                                    placeholder="Jean Dupont"
-                                />
-                            </div>
-                            <div className="space-y-2">
-                                <Label htmlFor="email">Email</Label>
-                                <Input
-                                    id="email"
-                                    type="email"
-                                    value={newUser.email}
-                                    onChange={(e) => setNewUser({ ...newUser, email: e.target.value })}
-                                    placeholder="jean.dupont@email.com"
-                                />
-                            </div>
-                            <div className="space-y-2">
-                                <Label htmlFor="phone">Téléphone (optionnel)</Label>
-                                <Input
-                                    id="phone"
-                                    value={newUser.phone}
-                                    onChange={(e) => setNewUser({ ...newUser, phone: e.target.value })}
-                                    placeholder="+33 6 12 34 56 78"
-                                />
-                            </div>
-                            <div className="space-y-2">
-                                <Label htmlFor="role">Rôle</Label>
-                                <Select
-                                    value={newUser.role}
-                                    onValueChange={(value: "admin" | "member") => setNewUser({ ...newUser, role: value })}
-                                >
-                                    <SelectTrigger>
-                                        <SelectValue />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="member">Membre</SelectItem>
-                                        <SelectItem value="admin">Administrateur</SelectItem>
-                                    </SelectContent>
-                                </Select>
-                            </div>
-                            <div className="flex justify-end gap-2">
-                                <Button variant="outline" onClick={() => setIsAddUserOpen(false)}>
-                                    Annuler
-                                </Button>
-                                <Button onClick={handleAddUser}>Ajouter</Button>
-                            </div>
-                        </div>
-                    </DialogContent>
-                </Dialog>
             </div>
 
-            {/* Users Grid */}
+            {/* --- Users Grid --- */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4">
                 {users.map((user) => (
                     <Card key={user.id} className="hover:shadow-md transition-shadow">
                         <CardHeader className="pb-3">
                             <div className="flex items-center justify-between">
+                                {/* User avatar + name + role */}
                                 <div className="flex items-center gap-2 md:gap-3">
                                     <Avatar className="w-8 h-8 md:w-10 md:h-10">
-                                        <AvatarImage src={user.avatar || "/placeholder.svg"} />
                                         <AvatarFallback className="text-xs md:text-sm">
-                                            {user.name
-                                                .split(" ")
-                                                .map((n) => n[0])
-                                                .join("")}
+                                            {/* Initials based on name */}
+                                            {user.name.split(" ").map((n) => n[0]).join("")}
                                         </AvatarFallback>
                                     </Avatar>
                                     <div>
@@ -196,68 +142,89 @@ export function UserManagement() {
                                         </div>
                                     </div>
                                 </div>
-                                <div
-                                    className={`w-2 h-2 md:w-3 md:h-3 rounded-full ${user.status === "active" ? "bg-green-500" : "bg-gray-400"}`}
-                                />
+
+                                {/* Action buttons only if current user is admin AND not their own account */}
+                                {currentUserRole === "admin" && localStorage.getItem("userEmail") !== user.email && (
+                                    <div className="flex gap-2">
+                                        {/* Edit role button */}
+                                        <Button
+                                            variant="ghost"
+                                            size="sm"
+                                            onClick={() => {
+                                                setSelectedUser(user)
+                                                setNewRole(user.role ?? "member")
+                                            }}
+                                        >
+                                            <Settings className="h-4 w-4" />
+                                        </Button>
+
+                                        {/* Delete user button */}
+                                        <Button
+                                            variant="ghost"
+                                            size="sm"
+                                            onClick={() => handleDelete(user.id)}
+                                            className="text-red-500 hover:text-red-700"
+                                        >
+                                            <Trash2 className="h-4 w-4" />
+                                        </Button>
+                                    </div>
+                                )}
                             </div>
                         </CardHeader>
+
+                        {/* --- User info content --- */}
                         <CardContent className="space-y-2 md:space-y-3">
+                            {/* Email */}
                             <div className="flex items-center gap-2 text-xs md:text-sm text-muted-foreground">
                                 <Mail className="h-3 w-3 md:h-4 md:w-4 flex-shrink-0" />
                                 <span className="truncate">{user.email}</span>
                             </div>
+                            {/* Phone (optional) */}
                             {user.phone && (
                                 <div className="flex items-center gap-2 text-xs md:text-sm text-muted-foreground">
                                     <Phone className="h-3 w-3 md:h-4 md:w-4 flex-shrink-0" />
                                     <span>{user.phone}</span>
                                 </div>
                             )}
-                            <div className="flex items-center justify-between pt-2 border-t">
-                <span className="text-xs text-muted-foreground">
-                  <span className="hidden sm:inline">Rejoint le </span>
-                    {new Date(user.joinDate).toLocaleDateString("fr-FR")}
-                </span>
-                                <Button variant="ghost" size="sm">
-                                    <Settings className="h-3 w-3 md:h-4 md:w-4" />
-                                </Button>
+                            {/* Join date */}
+                            <div className="pt-2 border-t text-xs text-muted-foreground">
+                                Joined on {new Date(user.joinDate).toLocaleDateString("fr-FR")}
                             </div>
                         </CardContent>
                     </Card>
                 ))}
             </div>
 
-            {/* Stats */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 md:gap-4">
-                <Card>
-                    <CardHeader className="pb-2">
-                        <CardTitle className="text-sm font-medium">Total utilisateurs</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                        <div className="text-2xl font-bold">{users.length}</div>
-                        <p className="text-xs text-muted-foreground">{users.filter((u) => u.status === "active").length} actifs</p>
-                    </CardContent>
-                </Card>
+            {/* --- Role edit dialog --- */}
+            <Dialog open={!!selectedUser} onOpenChange={() => setSelectedUser(null)}>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>Edit Role</DialogTitle>
+                        <DialogDescription>
+                            Choose a new role for {selectedUser?.name}.
+                        </DialogDescription>
+                    </DialogHeader>
 
-                <Card>
-                    <CardHeader className="pb-2">
-                        <CardTitle className="text-sm font-medium">Administrateurs</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                        <div className="text-2xl font-bold">{users.filter((u) => u.role === "admin").length}</div>
-                        <p className="text-xs text-muted-foreground">Permissions complètes</p>
-                    </CardContent>
-                </Card>
+                    {/* Select role */}
+                    <Select value={newRole} onValueChange={(v: "admin" | "member") => setNewRole(v)}>
+                        <SelectTrigger>
+                            <SelectValue placeholder="Select a role" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="admin">Administrator</SelectItem>
+                            <SelectItem value="member">Member</SelectItem>
+                        </SelectContent>
+                    </Select>
 
-                <Card>
-                    <CardHeader className="pb-2">
-                        <CardTitle className="text-sm font-medium">Nouveaux ce mois</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                        <div className="text-2xl font-bold">2</div>
-                        <p className="text-xs text-muted-foreground">+1 par rapport au mois dernier</p>
-                    </CardContent>
-                </Card>
-            </div>
+                    {/* Dialog actions */}
+                    <DialogFooter>
+                        <Button variant="outline" onClick={() => setSelectedUser(null)}>
+                            Cancel
+                        </Button>
+                        <Button onClick={handleRoleChange}>Save</Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
         </div>
     )
 }

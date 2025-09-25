@@ -38,7 +38,7 @@ export function AuthGuard({ children }: AuthGuardProps) {
                             <Home className="w-8 h-8 text-primary-foreground" />
                         </div>
                         <Loader2 className="w-8 h-8 animate-spin text-primary mb-4" />
-                        <p className="text-muted-foreground">Vérification de l'authentification...</p>
+                        <p className="text-muted-foreground">Vérification de l&apos;authentification...</p>
                     </CardContent>
                 </Card>
             </div>

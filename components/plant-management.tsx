@@ -332,7 +332,7 @@ export function PlantManagement({ foyerId }: { foyerId: number }) {
 
                 <Card>
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium">Besoin d'eau</CardTitle>
+                        <CardTitle className="text-sm font-medium">Besoin d&apos;eau</CardTitle>
                         <Droplets className="h-4 w-4 text-blue-500" />
                     </CardHeader>
                     <CardContent>
@@ -354,7 +354,7 @@ export function PlantManagement({ foyerId }: { foyerId: number }) {
             {/* TABS */}
             <Tabs defaultValue="overview">
                 <TabsList className="grid w-full grid-cols-2">
-                    <TabsTrigger value="overview">Vue d'ensemble</TabsTrigger>
+                    <TabsTrigger value="overview">Vue d&apos;ensemble</TabsTrigger>
                     <TabsTrigger value="analytics">Graphiques</TabsTrigger>
                 </TabsList>
 

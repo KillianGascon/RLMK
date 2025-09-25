@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/dialog"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 
+// --- User type definition ---
 interface User {
     id: number
     name: string
@@ -26,29 +27,36 @@ interface User {
 }
 
 export function UserManagement({ foyerId }: { foyerId: number }) {
+    // --- State: list of users ---
     const [users, setUsers] = useState<User[]>([])
+
+    // --- State: current logged-in user's role (default member) ---
     const [currentUserRole, setCurrentUserRole] = useState<"admin" | "member">("member")
 
+    // --- State for role edit dialog ---
     const [selectedUser, setSelectedUser] = useState<User | null>(null)
     const [newRole, setNewRole] = useState<"admin" | "member">("member")
 
-    // 🔹 Charger les utilisateurs du foyer
+    // 🔹 Fetch users for this foyer
     useEffect(() => {
         const fetchUsers = async () => {
             const res = await fetch(`/api/foyer/${foyerId}/users`)
             const data = await res.json()
 
+            // Map API response to User type
             const mapped: User[] = data.map((u: any) => ({
                 id: u.id,
                 name: u.name,
                 email: u.email,
                 role: u.role as "admin" | "member" | null,
                 phone: u.phone || undefined,
+                // For now we assign current date as joinDate
                 joinDate: new Date().toISOString().split("T")[0],
             }))
 
             setUsers(mapped)
 
+            // Load role from localStorage (simulating current user role)
             const role = localStorage.getItem("userRole") as "admin" | "member" | null
             if (role) setCurrentUserRole(role)
         }
@@ -56,7 +64,7 @@ export function UserManagement({ foyerId }: { foyerId: number }) {
         fetchUsers()
     }, [foyerId])
 
-    // 🔹 Modifier le rôle (API + mise à jour locale)
+    // 🔹 Change a user's role (API + local state update)
     const handleRoleChange = async () => {
         if (!selectedUser) return
         const res = await fetch(`/api/foyer/${foyerId}/users/${selectedUser.id}`, {
@@ -66,56 +74,63 @@ export function UserManagement({ foyerId }: { foyerId: number }) {
         })
 
         if (res.ok) {
+            // Update local state
             setUsers((prev) =>
                 prev.map((u) => (u.id === selectedUser.id ? { ...u, role: newRole } : u))
             )
-            setSelectedUser(null) // fermer la popup
+            setSelectedUser(null) // close dialog
         }
     }
 
-    // 🔹 Supprimer un utilisateur
+    // 🔹 Delete a user
     const handleDelete = async (userId: number) => {
         const res = await fetch(`/api/foyer/${foyerId}/users/${userId}`, {
             method: "DELETE",
         })
 
         if (res.ok) {
+            // Remove user from local state
             setUsers((prev) => prev.filter((u) => u.id !== userId))
         }
     }
 
+    // 🔹 Return role icon
     const getRoleIcon = (role: string | null) => {
         return role === "admin" ? <Crown className="h-4 w-4" /> : <UserCheck className="h-4 w-4" />
     }
 
+    // 🔹 Return role badge
     const getRoleBadge = (role: string | null) => {
         return role === "admin" ? (
-            <Badge className="bg-purple-100 text-purple-800">Administrateur</Badge>
+            <Badge className="bg-purple-100 text-purple-800">Administrator</Badge>
         ) : (
-            <Badge variant="secondary">Membre</Badge>
+            <Badge variant="secondary">Member</Badge>
         )
     }
 
     return (
         <div className="space-y-4 md:space-y-6">
+            {/* --- Page Header --- */}
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div>
-                    <h2 className="text-xl md:text-2xl font-bold">Gestion des utilisateurs</h2>
+                    <h2 className="text-xl md:text-2xl font-bold">User Management</h2>
                     <p className="text-sm md:text-base text-muted-foreground">
-                        Gérez les membres de votre foyer et leurs permissions
+                        Manage your household members and their permissions
                     </p>
                 </div>
             </div>
 
-            {/* Users Grid */}
+            {/* --- Users Grid --- */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4">
                 {users.map((user) => (
                     <Card key={user.id} className="hover:shadow-md transition-shadow">
                         <CardHeader className="pb-3">
                             <div className="flex items-center justify-between">
+                                {/* User avatar + name + role */}
                                 <div className="flex items-center gap-2 md:gap-3">
                                     <Avatar className="w-8 h-8 md:w-10 md:h-10">
                                         <AvatarFallback className="text-xs md:text-sm">
+                                            {/* Initials based on name */}
                                             {user.name.split(" ").map((n) => n[0]).join("")}
                                         </AvatarFallback>
                                     </Avatar>
@@ -128,10 +143,10 @@ export function UserManagement({ foyerId }: { foyerId: number }) {
                                     </div>
                                 </div>
 
-                                {/* Icônes actions seulement si admin et pas soi-même */}
+                                {/* Action buttons only if current user is admin AND not their own account */}
                                 {currentUserRole === "admin" && localStorage.getItem("userEmail") !== user.email && (
                                     <div className="flex gap-2">
-                                        {/* Bouton ouvrir popup modification */}
+                                        {/* Edit role button */}
                                         <Button
                                             variant="ghost"
                                             size="sm"
@@ -143,7 +158,7 @@ export function UserManagement({ foyerId }: { foyerId: number }) {
                                             <Settings className="h-4 w-4" />
                                         </Button>
 
-                                        {/* Bouton supprimer */}
+                                        {/* Delete user button */}
                                         <Button
                                             variant="ghost"
                                             size="sm"
@@ -156,50 +171,57 @@ export function UserManagement({ foyerId }: { foyerId: number }) {
                                 )}
                             </div>
                         </CardHeader>
+
+                        {/* --- User info content --- */}
                         <CardContent className="space-y-2 md:space-y-3">
+                            {/* Email */}
                             <div className="flex items-center gap-2 text-xs md:text-sm text-muted-foreground">
                                 <Mail className="h-3 w-3 md:h-4 md:w-4 flex-shrink-0" />
                                 <span className="truncate">{user.email}</span>
                             </div>
+                            {/* Phone (optional) */}
                             {user.phone && (
                                 <div className="flex items-center gap-2 text-xs md:text-sm text-muted-foreground">
                                     <Phone className="h-3 w-3 md:h-4 md:w-4 flex-shrink-0" />
                                     <span>{user.phone}</span>
                                 </div>
                             )}
+                            {/* Join date */}
                             <div className="pt-2 border-t text-xs text-muted-foreground">
-                                Rejoint le {new Date(user.joinDate).toLocaleDateString("fr-FR")}
+                                Joined on {new Date(user.joinDate).toLocaleDateString("fr-FR")}
                             </div>
                         </CardContent>
                     </Card>
                 ))}
             </div>
 
-            {/* Popup modification rôle */}
+            {/* --- Role edit dialog --- */}
             <Dialog open={!!selectedUser} onOpenChange={() => setSelectedUser(null)}>
                 <DialogContent>
                     <DialogHeader>
-                        <DialogTitle>Modifier le rôle</DialogTitle>
+                        <DialogTitle>Edit Role</DialogTitle>
                         <DialogDescription>
-                            Choisissez un nouveau rôle pour {selectedUser?.name}.
+                            Choose a new role for {selectedUser?.name}.
                         </DialogDescription>
                     </DialogHeader>
 
+                    {/* Select role */}
                     <Select value={newRole} onValueChange={(v: "admin" | "member") => setNewRole(v)}>
                         <SelectTrigger>
-                            <SelectValue placeholder="Sélectionnez un rôle" />
+                            <SelectValue placeholder="Select a role" />
                         </SelectTrigger>
                         <SelectContent>
-                            <SelectItem value="admin">Administrateur</SelectItem>
-                            <SelectItem value="member">Membre</SelectItem>
+                            <SelectItem value="admin">Administrator</SelectItem>
+                            <SelectItem value="member">Member</SelectItem>
                         </SelectContent>
                     </Select>
 
+                    {/* Dialog actions */}
                     <DialogFooter>
                         <Button variant="outline" onClick={() => setSelectedUser(null)}>
-                            Annuler
+                            Cancel
                         </Button>
-                        <Button onClick={handleRoleChange}>Sauvegarder</Button>
+                        <Button onClick={handleRoleChange}>Save</Button>
                     </DialogFooter>
                 </DialogContent>
             </Dialog>

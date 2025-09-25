@@ -1,20 +1,25 @@
 import { prisma } from "@/lib/prisma"
 import { NextResponse } from "next/server"
 
+// Define the type for route parameters
 interface Params {
     params: { id: string }
 }
 
-// 🔵 GET une seule plante
+// 🔵 GET a single plant by ID
 export async function GET(req: Request, { params }: Params) {
     try {
+        // Parse plant ID from route parameters
         const plantId = parseInt(params.id)
+        // Fetch plant from database
         const p = await prisma.plante.findUnique({ where: { id: plantId } })
 
+        // If plant not found, return 404 error
         if (!p) {
-            return NextResponse.json({ error: "Plante non trouvée" }, { status: 404 })
+            return NextResponse.json({ error: "Plant not found" }, { status: 404 })
         }
 
+        // Format plant data for response
         const formatted = {
             id: p.id.toString(),
             name: p.Nom_Plante,
@@ -32,19 +37,24 @@ export async function GET(req: Request, { params }: Params) {
             notes: p.Description_Plante ?? "",
         }
 
+        // Return formatted plant data as JSON
         return NextResponse.json(formatted)
     } catch (err) {
-        console.error("Erreur GET /api/plants/[id]:", err)
-        return NextResponse.json({ error: "Erreur serveur" }, { status: 500 })
+        // Log and return server error
+        console.error("Error GET /api/plants/[id]:", err)
+        return NextResponse.json({ error: "Server error" }, { status: 500 })
     }
 }
 
-// 🟡 PUT update plante
+// 🟡 PUT update plant by ID
 export async function PUT(req: Request, { params }: Params) {
     try {
+        // Parse plant ID from route parameters
         const plantId = parseInt(params.id)
+        // Parse request body for updated plant data
         const body = await req.json()
 
+        // Update plant in database
         const updated = await prisma.plante.update({
             where: { id: plantId },
             data: {
@@ -60,25 +70,31 @@ export async function PUT(req: Request, { params }: Params) {
             },
         })
 
+        // Return updated plant data as JSON
         return NextResponse.json(updated)
     } catch (err) {
-        console.error("Erreur PUT /api/plants/[id]:", err)
-        return NextResponse.json({ error: "Erreur serveur" }, { status: 500 })
+        // Log and return server error
+        console.error("Error PUT /api/plants/[id]:", err)
+        return NextResponse.json({ error: "Server error" }, { status: 500 })
     }
 }
 
-// 🔴 DELETE plante
+// 🔴 DELETE plant by ID
 export async function DELETE(req: Request, { params }: Params) {
     try {
+        // Parse plant ID from route parameters
         const plantId = parseInt(params.id)
 
+        // Delete plant from database
         await prisma.plante.delete({
             where: { id: plantId },
         })
 
+        // Return success response
         return NextResponse.json({ success: true })
     } catch (err) {
-        console.error("Erreur DELETE /api/plants/[id]:", err)
-        return NextResponse.json({ error: "Erreur serveur" }, { status: 500 })
+        // Log and return server error
+        console.error("Error DELETE /api/plants/[id]:", err)
+        return NextResponse.json({ error: "Server error" }, { status: 500 })
     }
 }

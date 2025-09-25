@@ -1,19 +1,22 @@
 import { prisma } from "@/lib/prisma"
 import { NextResponse } from "next/server"
 
-// PUT update stock
+// PUT: Update a stock item by ID
 export async function PUT(
     req: Request,
     { params }: { params: { id: string } }
 ) {
     try {
+        // Parse request body for updated stock data
         const body = await req.json()
         const { Nom_Stock, Description_Stock, Id_Piece, Type_Stock } = body
 
+        // Validate required fields
         if (!Nom_Stock || !Id_Piece || !Type_Stock) {
-            return NextResponse.json({ error: "Champs manquants" }, { status: 400 })
+            return NextResponse.json({ error: "Missing fields" }, { status: 400 })
         }
 
+        // Update stock in the database, including related room and food count
         const updatedStock = await prisma.stock.update({
             where: { id: Number(params.id) },
             data: {
@@ -23,35 +26,40 @@ export async function PUT(
                 Type_Stock,
             },
             include: {
-                Piece: true,
-                _count: { select: { Aliment: true } }, // ✅ récupère le nombre d'aliments
+                Piece: true, // Include related room
+                _count: { select: { Aliment: true } }, // Include count of related food items
             },
         })
 
+        // Return updated stock as JSON
         return NextResponse.json(updatedStock)
     } catch (err) {
-        console.error("Erreur PUT /api/stock/[id]:", err)
-        return NextResponse.json({ error: "Erreur serveur" }, { status: 500 })
+        // Log and return server error
+        console.error("Error PUT /api/stock/[id]:", err)
+        return NextResponse.json({ error: "Server error" }, { status: 500 })
     }
 }
 
-// DELETE stock
+// DELETE: Remove a stock item by ID
 export async function DELETE(
     req: Request,
     { params }: { params: { id: string } }
 ) {
     try {
+        // Delete stock from the database, including related room and food count
         const deletedStock = await prisma.stock.delete({
             where: { id: Number(params.id) },
             include: {
-                Piece: true,
-                _count: { select: { Aliment: true } }, // ✅ renvoie aussi le compteur
+                Piece: true, // Include related room
+                _count: { select: { Aliment: true } }, // Include count of related food items
             },
         })
 
+        // Return deleted stock as JSON
         return NextResponse.json(deletedStock)
     } catch (err) {
-        console.error("Erreur DELETE /api/stock/[id]:", err)
-        return NextResponse.json({ error: "Erreur serveur" }, { status: 500 })
+        // Log and return server error
+        console.error("Error DELETE /api/stock/[id]:", err)
+        return NextResponse.json({ error: "Server error" }, { status: 500 })
     }
 }

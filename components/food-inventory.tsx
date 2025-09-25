@@ -1,5 +1,6 @@
 "use client"
 
+// Imports React hooks and UI components for cards, dialogs, inputs, etc.
 import { useEffect, useState } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -16,6 +17,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Plus, Refrigerator, Home, Package, Box, Edit, Trash2 } from "lucide-react"
 
 // --- Types ---
+// Stock, Room, and Aliment interfaces define the data structure
 interface Stock {
     id: number
     Nom_Stock: string
@@ -45,6 +47,7 @@ interface Aliment {
 }
 
 // --- Utils ---
+// Helper functions to check expiration status
 const isExpired = (date?: string) => date ? new Date(date) < new Date() : false
 const isExpiringSoon = (date?: string) => {
     if (!date) return false
@@ -54,19 +57,21 @@ const isExpiringSoon = (date?: string) => {
     return diff <= 7 && diff > 0
 }
 
+// Main component for food inventory management
 export function FoodInventory({ foyerId }: { foyerId: number }) {
+    // State for stocks, rooms, aliments, and loading status
     const [stocks, setStocks] = useState<Stock[]>([])
     const [rooms, setRooms] = useState<Room[]>([])
     const [aliments, setAliments] = useState<Aliment[]>([])
     const [loading, setLoading] = useState(true)
 
-    // Dialogs
+    // Dialog open/close states
     const [isAddStockDialogOpen, setIsAddStockDialogOpen] = useState(false)
     const [isEditStockDialogOpen, setIsEditStockDialogOpen] = useState(false)
     const [isAddAlimentDialogOpen, setIsAddAlimentDialogOpen] = useState(false)
     const [isEditAlimentDialogOpen, setIsEditAlimentDialogOpen] = useState(false)
 
-    // States
+    // Form states for new and editing stock/aliment
     const [newStock, setNewStock] = useState({
         Nom_Stock: "",
         Description_Stock: "",
@@ -122,6 +127,7 @@ export function FoodInventory({ foyerId }: { foyerId: number }) {
     }, [])
 
     // --- Add stock ---
+    // Handles adding a new stock
     const handleAddStock = async () => {
         if (!newStock.Nom_Stock || !newStock.Id_Piece) return
         const res = await fetch("/api/stock", {
@@ -142,6 +148,7 @@ export function FoodInventory({ foyerId }: { foyerId: number }) {
     }
 
     // --- Update stock ---
+    // Handles editing an existing stock
     const handleUpdateStock = async () => {
         if (!editingStock) return
         const res = await fetch(`/api/stock/${editingStock.id}`, {
@@ -156,12 +163,14 @@ export function FoodInventory({ foyerId }: { foyerId: number }) {
     }
 
     // --- Delete stock ---
+    // Handles deleting a stock
     const handleDeleteStock = async (id: number) => {
         await fetch(`/api/stock/${id}`, { method: "DELETE" })
         setStocks(stocks.filter((s) => s.id !== id))
     }
 
     // --- Add aliment ---
+    // Handles adding a new aliment (food item)
     const handleAddAliment = async () => {
         if (!newAliment.Nom_Aliment || !newAliment.Id_Stock) return
         const res = await fetch("/api/aliment", {
@@ -185,6 +194,7 @@ export function FoodInventory({ foyerId }: { foyerId: number }) {
     }
 
     // --- Update aliment ---
+    // Handles editing an existing aliment
     const handleUpdateAliment = async () => {
         if (!editingAliment) return
         const res = await fetch(`/api/aliment/${editingAliment.id}`, {
@@ -200,12 +210,14 @@ export function FoodInventory({ foyerId }: { foyerId: number }) {
     }
 
     // --- Delete aliment ---
+    // Handles deleting an aliment
     const handleDeleteAliment = async (id: number) => {
         await fetch(`/api/aliment/${id}`, { method: "DELETE" })
         setAliments(aliments.filter((a) => a.id !== id))
         await fetchStocks()
     }
 
+    // Returns the appropriate icon for a stock type
     const getStockIcon = (type: string) => {
         switch (type) {
             case "FRIGO": return <Refrigerator className="h-4 w-4 text-muted-foreground" />
@@ -215,19 +227,22 @@ export function FoodInventory({ foyerId }: { foyerId: number }) {
         }
     }
 
+    // --- Render UI ---
+    // Renders stocks, aliments, and dialogs for add/edit actions
     return (
         <div className="space-y-6">
-            {/* Header stocks */}
+            {/* Header and add stock dialog */}
             <div className="flex justify-between items-center">
-                <h2 className="text-xl font-bold">Gestion des stocks</h2>
+                <h2 className="text-xl font-bold">Stock management</h2>
                 <Dialog open={isAddStockDialogOpen} onOpenChange={setIsAddStockDialogOpen}>
                     <DialogTrigger asChild>
-                        <Button><Plus className="h-4 w-4" /> Ajouter un stock</Button>
+                        <Button><Plus className="h-4 w-4" /> Add stock</Button>
                     </DialogTrigger>
                     <DialogContent>
-                        <DialogHeader><DialogTitle>Ajouter un stock</DialogTitle></DialogHeader>
+                        <DialogHeader><DialogTitle>Add stock</DialogTitle></DialogHeader>
+                        {/* Form for new stock */}
                         <div className="space-y-3">
-                            <Label>Nom du stock</Label>
+                            <Label>Stock name</Label>
                             <Input value={newStock.Nom_Stock} onChange={(e) => setNewStock({ ...newStock, Nom_Stock: e.target.value })} />
                             <Label>Description</Label>
                             <Input value={newStock.Description_Stock} onChange={(e) => setNewStock({ ...newStock, Description_Stock: e.target.value })} />
@@ -235,29 +250,29 @@ export function FoodInventory({ foyerId }: { foyerId: number }) {
                             <Select value={newStock.Type_Stock} onValueChange={(val) => setNewStock({ ...newStock, Type_Stock: val })}>
                                 <SelectTrigger><SelectValue /></SelectTrigger>
                                 <SelectContent>
-                                    <SelectItem value="FRIGO">Frigo</SelectItem>
-                                    <SelectItem value="CONGELATEUR">Congélateur</SelectItem>
-                                    <SelectItem value="ETAGERES">Étagères</SelectItem>
+                                    <SelectItem value="FRIGO">Fridge</SelectItem>
+                                    <SelectItem value="CONGELATEUR">Freezer</SelectItem>
+                                    <SelectItem value="ETAGERES">Shelves</SelectItem>
                                 </SelectContent>
                             </Select>
-                            <Label>Pièce</Label>
+                            <Label>Room</Label>
                             <Select value={newStock.Id_Piece ? String(newStock.Id_Piece) : ""} onValueChange={(val) => setNewStock({ ...newStock, Id_Piece: Number(val) })}>
-                                <SelectTrigger><SelectValue placeholder="Choisir une pièce" /></SelectTrigger>
+                                <SelectTrigger><SelectValue placeholder="Choose a room" /></SelectTrigger>
                                 <SelectContent>
                                     {rooms.map((room) => <SelectItem key={room.id} value={String(room.id)}>{room.name}</SelectItem>)}
                                 </SelectContent>
                             </Select>
                             <div className="flex justify-end gap-2">
-                                <Button variant="outline" onClick={() => setIsAddStockDialogOpen(false)}>Annuler</Button>
-                                <Button onClick={handleAddStock}>Ajouter</Button>
+                                <Button variant="outline" onClick={() => setIsAddStockDialogOpen(false)}>Cancel</Button>
+                                <Button onClick={handleAddStock}>Add</Button>
                             </div>
                         </div>
                     </DialogContent>
                 </Dialog>
             </div>
 
-            {/* Liste stocks */}
-            {loading ? <p>Chargement...</p> : (
+            {/* List of stocks */}
+            {loading ? <p>Loading...</p> : (
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
                     {stocks.map((stock) => (
                         <Card key={stock.id}>
@@ -268,6 +283,7 @@ export function FoodInventory({ foyerId }: { foyerId: number }) {
                                 </CardTitle>
                                 <div className="flex gap-2 items-center">
                                     {getStockIcon(stock.Type_Stock)}
+                                    {/* Edit and delete buttons only if stock is empty */}
                                     {stock._count?.Aliment === 0 && (
                                         <>
                                             <Button variant="ghost" size="sm" onClick={() => { setEditingStock(stock); setIsEditStockDialogOpen(true) }}>
@@ -282,20 +298,20 @@ export function FoodInventory({ foyerId }: { foyerId: number }) {
                             </CardHeader>
                             <CardContent>
                                 <div className="text-2xl font-bold">{stock._count?.Aliment ?? 0}</div>
-                                <p className="text-xs text-muted-foreground">Articles</p>
+                                <p className="text-xs text-muted-foreground">Items</p>
                             </CardContent>
                         </Card>
                     ))}
                 </div>
             )}
 
-            {/* Dialog édition stock */}
+            {/* Edit stock dialog */}
             <Dialog open={isEditStockDialogOpen} onOpenChange={setIsEditStockDialogOpen}>
                 <DialogContent>
-                    <DialogHeader><DialogTitle>Modifier un stock</DialogTitle></DialogHeader>
+                    <DialogHeader><DialogTitle>Edit stock</DialogTitle></DialogHeader>
                     {editingStock && (
                         <div className="space-y-3">
-                            <Label>Nom</Label>
+                            <Label>Name</Label>
                             <Input value={editingStock.Nom_Stock} onChange={(e) => setEditingStock({ ...editingStock, Nom_Stock: e.target.value })} />
                             <Label>Description</Label>
                             <Input value={editingStock.Description_Stock ?? ""} onChange={(e) => setEditingStock({ ...editingStock, Description_Stock: e.target.value })} />
@@ -303,19 +319,19 @@ export function FoodInventory({ foyerId }: { foyerId: number }) {
                             <Select value={editingStock.Type_Stock} onValueChange={(val) => setEditingStock({ ...editingStock, Type_Stock: val })}>
                                 <SelectTrigger><SelectValue /></SelectTrigger>
                                 <SelectContent>
-                                    <SelectItem value="FRIGO">Frigo</SelectItem>
-                                    <SelectItem value="CONGELATEUR">Congélateur</SelectItem>
-                                    <SelectItem value="ETAGERES">Étagères</SelectItem>
+                                    <SelectItem value="FRIGO">Fridge</SelectItem>
+                                    <SelectItem value="CONGELATEUR">Freezer</SelectItem>
+                                    <SelectItem value="ETAGERES">Shelves</SelectItem>
                                 </SelectContent>
                             </Select>
-                            <Label>Pièce</Label>
+                            <Label>Room</Label>
                             <Select value={String(editingStock.Id_Piece)} onValueChange={(val) => setEditingStock({ ...editingStock, Id_Piece: Number(val) })}>
                                 <SelectTrigger><SelectValue /></SelectTrigger>
                                 <SelectContent>{rooms.map((room) => <SelectItem key={room.id} value={String(room.id)}>{room.name}</SelectItem>)}</SelectContent>
                             </Select>
                             <div className="flex justify-end gap-2">
-                                <Button variant="outline" onClick={() => setIsEditStockDialogOpen(false)}>Annuler</Button>
-                                <Button onClick={handleUpdateStock}>Enregistrer</Button>
+                                <Button variant="outline" onClick={() => setIsEditStockDialogOpen(false)}>Cancel</Button>
+                                <Button onClick={handleUpdateStock}>Save</Button>
                             </div>
                         </div>
                     )}
@@ -324,53 +340,54 @@ export function FoodInventory({ foyerId }: { foyerId: number }) {
 
             {/* --- Section aliments --- */}
             <div className="flex justify-between items-center mt-8">
-                <h3 className="text-lg font-semibold">Aliments</h3>
+                <h3 className="text-lg font-semibold">Food items</h3>
                 <Dialog open={isAddAlimentDialogOpen} onOpenChange={setIsAddAlimentDialogOpen}>
                     <DialogTrigger asChild>
-                        <Button><Plus className="h-4 w-4" /> Ajouter un aliment</Button>
+                        <Button><Plus className="h-4 w-4" /> Add food item</Button>
                     </DialogTrigger>
                     <DialogContent>
-                        <DialogHeader><DialogTitle>Ajouter un aliment</DialogTitle></DialogHeader>
+                        <DialogHeader><DialogTitle>Add food item</DialogTitle></DialogHeader>
+                        {/* Form for new aliment */}
                         <div className="space-y-3">
-                            <Label>Nom</Label>
+                            <Label>Name</Label>
                             <Input value={newAliment.Nom_Aliment} onChange={(e) => setNewAliment({ ...newAliment, Nom_Aliment: e.target.value })} />
 
-                            <Label>Quantité</Label>
+                            <Label>Quantity</Label>
                             <Input type="number" value={newAliment.Quantite} onChange={(e) => setNewAliment({ ...newAliment, Quantite: Number(e.target.value) })} />
 
-                            <Label>Unité</Label>
+                            <Label>Unit</Label>
                             <Select
                                 value={newAliment.Unite_Quantite}
                                 onValueChange={(val) => setNewAliment({ ...newAliment, Unite_Quantite: val })}
                             >
-                                <SelectTrigger><SelectValue placeholder="Choisir une unité" /></SelectTrigger>
+                                <SelectTrigger><SelectValue placeholder="Choose a unit" /></SelectTrigger>
                                 <SelectContent>
                                     <SelectItem value="kg">kg</SelectItem>
                                     <SelectItem value="g">g</SelectItem>
                                     <SelectItem value="l">l</SelectItem>
-                                    <SelectItem value="autres">Autres</SelectItem>
+                                    <SelectItem value="autres">Other</SelectItem>
                                 </SelectContent>
                             </Select>
 
-                            <Label>Date de péremption</Label>
+                            <Label>Expiration date</Label>
                             <Input type="date" value={newAliment.Date_Peremption} onChange={(e) => setNewAliment({ ...newAliment, Date_Peremption: e.target.value })} />
 
                             <Label>Stock</Label>
                             <Select value={newAliment.Id_Stock ? String(newAliment.Id_Stock) : ""} onValueChange={(val) => setNewAliment({ ...newAliment, Id_Stock: Number(val) })}>
-                                <SelectTrigger><SelectValue placeholder="Choisir un stock" /></SelectTrigger>
+                                <SelectTrigger><SelectValue placeholder="Choose a stock" /></SelectTrigger>
                                 <SelectContent>{stocks.map((s) => <SelectItem key={s.id} value={String(s.id)}>{s.Nom_Stock}</SelectItem>)}</SelectContent>
                             </Select>
 
                             <div className="flex justify-end gap-2">
-                                <Button variant="outline" onClick={() => setIsAddAlimentDialogOpen(false)}>Annuler</Button>
-                                <Button onClick={handleAddAliment}>Ajouter</Button>
+                                <Button variant="outline" onClick={() => setIsAddAlimentDialogOpen(false)}>Cancel</Button>
+                                <Button onClick={handleAddAliment}>Add</Button>
                             </div>
                         </div>
                     </DialogContent>
                 </Dialog>
             </div>
 
-            {/* Liste aliments */}
+            {/* List of aliments */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4">
                 {aliments.map((item) => (
                     <Card key={item.id} className={`hover:shadow-md transition-shadow ${
@@ -394,12 +411,12 @@ export function FoodInventory({ foyerId }: { foyerId: number }) {
                         </CardHeader>
                         <CardContent className="space-y-2">
                             <div className="flex justify-between text-sm">
-                                <span>Quantité</span>
+                                <span>Quantity</span>
                                 <span>{item.Quantite} {item.Unite_Quantite}</span>
                             </div>
                             {item.Date_Peremption && (
                                 <div className="flex justify-between text-sm">
-                                    <span>Expire le</span>
+                                    <span>Expires on</span>
                                     <span className={isExpired(item.Date_Peremption) ? "text-red-600 font-medium"
                                         : isExpiringSoon(item.Date_Peremption) ? "text-orange-600 font-medium" : "text-muted-foreground"}>
                     {new Date(item.Date_Peremption).toLocaleDateString("fr-FR")}
@@ -411,33 +428,33 @@ export function FoodInventory({ foyerId }: { foyerId: number }) {
                 ))}
             </div>
 
-            {/* Dialog édition aliment */}
+            {/* Edit aliment dialog */}
             <Dialog open={isEditAlimentDialogOpen} onOpenChange={setIsEditAlimentDialogOpen}>
                 <DialogContent>
-                    <DialogHeader><DialogTitle>Modifier un aliment</DialogTitle></DialogHeader>
+                    <DialogHeader><DialogTitle>Edit food item</DialogTitle></DialogHeader>
                     {editingAliment && (
                         <div className="space-y-3">
-                            <Label>Nom</Label>
+                            <Label>Name</Label>
                             <Input value={editingAliment.Nom_Aliment} onChange={(e) => setEditingAliment({ ...editingAliment, Nom_Aliment: e.target.value })} />
 
-                            <Label>Quantité</Label>
+                            <Label>Quantity</Label>
                             <Input type="number" value={editingAliment.Quantite ?? 0} onChange={(e) => setEditingAliment({ ...editingAliment, Quantite: Number(e.target.value) })} />
 
-                            <Label>Unité</Label>
+                            <Label>Unit</Label>
                             <Select
                                 value={editingAliment.Unite_Quantite ?? ""}
                                 onValueChange={(val) => setEditingAliment({ ...editingAliment, Unite_Quantite: val })}
                             >
-                                <SelectTrigger><SelectValue placeholder="Choisir une unité" /></SelectTrigger>
+                                <SelectTrigger><SelectValue placeholder="Choose a unit" /></SelectTrigger>
                                 <SelectContent>
                                     <SelectItem value="kg">kg</SelectItem>
                                     <SelectItem value="g">g</SelectItem>
                                     <SelectItem value="l">l</SelectItem>
-                                    <SelectItem value="autres">Autres</SelectItem>
+                                    <SelectItem value="autres">Other</SelectItem>
                                 </SelectContent>
                             </Select>
 
-                            <Label>Date de péremption</Label>
+                            <Label>Expiration date</Label>
                             <Input type="date" value={editingAliment.Date_Peremption?.split("T")[0] ?? ""} onChange={(e) => setEditingAliment({ ...editingAliment, Date_Peremption: e.target.value })} />
 
                             <Label>Stock</Label>
@@ -447,8 +464,8 @@ export function FoodInventory({ foyerId }: { foyerId: number }) {
                             </Select>
 
                             <div className="flex justify-end gap-2">
-                                <Button variant="outline" onClick={() => setIsEditAlimentDialogOpen(false)}>Annuler</Button>
-                                <Button onClick={handleUpdateAliment}>Enregistrer</Button>
+                                <Button variant="outline" onClick={() => setIsEditAlimentDialogOpen(false)}>Cancel</Button>
+                                <Button onClick={handleUpdateAliment}>Save</Button>
                             </div>
                         </div>
                     )}

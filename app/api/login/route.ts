@@ -5,48 +5,52 @@ import jwt from "jsonwebtoken"
 
 const JWT_SECRET = process.env.JWT_SECRET || "dev_secret_key"
 
+// Handle user login
 export async function POST(req: Request) {
     try {
+        // Parse request body for email and password
         const body = await req.json()
         const { email, password } = body
 
+        // Validate required fields
         if (!email || !password) {
-            return NextResponse.json({ error: "Champs manquants" }, { status: 400 })
+            return NextResponse.json({ error: "Missing fields" }, { status: 400 })
         }
 
-        // Vérifier si l’utilisateur existe
+        // Find user by email, including household memberships
         const user = await prisma.utilisateur.findUnique({
             where: { Email_Utilisateur: email },
             include: {
                 Utilisateur_Foyer: {
                     include: {
-                        Foyer: true, // 🔹 pour récupérer le nom du foyer
+                        Foyer: true, // Include household name
                     },
                 },
             },
         })
 
+        // If user not found, return error
         if (!user) {
-            return NextResponse.json({ error: "Email ou mot de passe incorrect" }, { status: 401 })
+            return NextResponse.json({ error: "Incorrect email or password" }, { status: 401 })
         }
 
-        // Vérifier le mot de passe
+        // Check password validity
         const validPassword = await bcrypt.compare(password, user.MotDePasse_Utilisateur)
         if (!validPassword) {
-            return NextResponse.json({ error: "Email ou mot de passe incorrect" }, { status: 401 })
+            return NextResponse.json({ error: "Incorrect email or password" }, { status: 401 })
         }
 
-        // Récupérer les foyers + rôles
+        // Get households and roles for the user
         const foyers = user.Utilisateur_Foyer.map((uf) => ({
             id: uf.Foyer.id,
             name: uf.Foyer.Nom_Foyer,
             role: uf.Role,
         }))
 
-        // Rôle principal (ex: premier foyer)
+        // Main role (e.g., first household)
         const role = foyers.length > 0 ? foyers[0].role : "member"
 
-        // Générer un JWT
+        // Generate JWT token for authentication
         const token = jwt.sign(
             {
                 id: user.id,
@@ -57,9 +61,9 @@ export async function POST(req: Request) {
             { expiresIn: "7d" }
         )
 
-        // Réponse envoyée au frontend
+        // Send response to frontend with user info and token
         return NextResponse.json({
-            message: "Connexion réussie",
+            message: "Login successful",
             token,
             user: {
                 id: user.id,
@@ -70,7 +74,8 @@ export async function POST(req: Request) {
             },
         })
     } catch (error) {
-        console.error("❌ Erreur login:", error)
-        return NextResponse.json({ error: "Erreur serveur" }, { status: 500 })
+        // Log and return server error
+        console.error("❌ Login error:", error)
+        return NextResponse.json({ error: "Server error" }, { status: 500 })
     }
 }

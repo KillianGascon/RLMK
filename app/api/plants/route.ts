@@ -1,13 +1,13 @@
 import { prisma } from "@/lib/prisma"
 import { NextResponse } from "next/server"
 
-// GET all plants
+// Handle GET request to fetch all plants
 export async function GET() {
     try {
+        // Retrieve all plants from the database
         const plants = await prisma.plante.findMany()
 
-        // todo: A adapter
-
+        // Format each plant for the response
         const formatted = plants.map((p) => {
             return {
                 id: p.id.toString(),
@@ -27,19 +27,22 @@ export async function GET() {
             }
         })
 
+        // Return the formatted list of plants as JSON
         return NextResponse.json(formatted)
     } catch (err) {
+        // Log and return server error
         console.error("Erreur GET /api/plants:", err)
-        return NextResponse.json({ error: "Erreur serveur" }, { status: 500 })
+        return NextResponse.json({ error: "Server error" }, { status: 500 })
     }
 }
 
-
-// POST create plant
+// Handle POST request to create a new plant
 export async function POST(req: Request) {
     try {
+        // Parse request body for new plant data
         const body = await req.json()
 
+        // Create new plant in the database
         const newPlant = await prisma.plante.create({
             data: {
                 Nom_Plante: body.name,
@@ -55,7 +58,7 @@ export async function POST(req: Request) {
             },
         })
 
-        // 🟢 Format identique au GET
+        // Format the newly created plant for the response
         const formatted = {
             id: newPlant.id.toString(),
             name: newPlant.Nom_Plante,
@@ -73,9 +76,11 @@ export async function POST(req: Request) {
             notes: newPlant.Description_Plante ?? "",
         }
 
+        // Return the formatted new plant as JSON
         return NextResponse.json(formatted)
     } catch (err) {
+        // Log and return server error
         console.error("Erreur POST /api/plants:", err)
-        return NextResponse.json({ error: "Erreur serveur" }, { status: 500 })
+        return NextResponse.json({ error: "Server error" }, { status: 500 })
     }
 }

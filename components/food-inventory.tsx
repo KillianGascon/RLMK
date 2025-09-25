@@ -334,17 +334,33 @@ export function FoodInventory({ foyerId }: { foyerId: number }) {
                         <div className="space-y-3">
                             <Label>Nom</Label>
                             <Input value={newAliment.Nom_Aliment} onChange={(e) => setNewAliment({ ...newAliment, Nom_Aliment: e.target.value })} />
+
                             <Label>Quantité</Label>
                             <Input type="number" value={newAliment.Quantite} onChange={(e) => setNewAliment({ ...newAliment, Quantite: Number(e.target.value) })} />
+
                             <Label>Unité</Label>
-                            <Input value={newAliment.Unite_Quantite} onChange={(e) => setNewAliment({ ...newAliment, Unite_Quantite: e.target.value })} />
+                            <Select
+                                value={newAliment.Unite_Quantite}
+                                onValueChange={(val) => setNewAliment({ ...newAliment, Unite_Quantite: val })}
+                            >
+                                <SelectTrigger><SelectValue placeholder="Choisir une unité" /></SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="kg">kg</SelectItem>
+                                    <SelectItem value="g">g</SelectItem>
+                                    <SelectItem value="l">l</SelectItem>
+                                    <SelectItem value="autres">Autres</SelectItem>
+                                </SelectContent>
+                            </Select>
+
                             <Label>Date de péremption</Label>
                             <Input type="date" value={newAliment.Date_Peremption} onChange={(e) => setNewAliment({ ...newAliment, Date_Peremption: e.target.value })} />
+
                             <Label>Stock</Label>
                             <Select value={newAliment.Id_Stock ? String(newAliment.Id_Stock) : ""} onValueChange={(val) => setNewAliment({ ...newAliment, Id_Stock: Number(val) })}>
                                 <SelectTrigger><SelectValue placeholder="Choisir un stock" /></SelectTrigger>
                                 <SelectContent>{stocks.map((s) => <SelectItem key={s.id} value={String(s.id)}>{s.Nom_Stock}</SelectItem>)}</SelectContent>
                             </Select>
+
                             <div className="flex justify-end gap-2">
                                 <Button variant="outline" onClick={() => setIsAddAlimentDialogOpen(false)}>Annuler</Button>
                                 <Button onClick={handleAddAliment}>Ajouter</Button>
@@ -403,17 +419,33 @@ export function FoodInventory({ foyerId }: { foyerId: number }) {
                         <div className="space-y-3">
                             <Label>Nom</Label>
                             <Input value={editingAliment.Nom_Aliment} onChange={(e) => setEditingAliment({ ...editingAliment, Nom_Aliment: e.target.value })} />
+
                             <Label>Quantité</Label>
                             <Input type="number" value={editingAliment.Quantite ?? 0} onChange={(e) => setEditingAliment({ ...editingAliment, Quantite: Number(e.target.value) })} />
+
                             <Label>Unité</Label>
-                            <Input value={editingAliment.Unite_Quantite ?? ""} onChange={(e) => setEditingAliment({ ...editingAliment, Unite_Quantite: e.target.value })} />
+                            <Select
+                                value={editingAliment.Unite_Quantite ?? ""}
+                                onValueChange={(val) => setEditingAliment({ ...editingAliment, Unite_Quantite: val })}
+                            >
+                                <SelectTrigger><SelectValue placeholder="Choisir une unité" /></SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="kg">kg</SelectItem>
+                                    <SelectItem value="g">g</SelectItem>
+                                    <SelectItem value="l">l</SelectItem>
+                                    <SelectItem value="autres">Autres</SelectItem>
+                                </SelectContent>
+                            </Select>
+
                             <Label>Date de péremption</Label>
                             <Input type="date" value={editingAliment.Date_Peremption?.split("T")[0] ?? ""} onChange={(e) => setEditingAliment({ ...editingAliment, Date_Peremption: e.target.value })} />
+
                             <Label>Stock</Label>
                             <Select value={String(editingAliment.Id_Stock)} onValueChange={(val) => setEditingAliment({ ...editingAliment, Id_Stock: Number(val) })}>
                                 <SelectTrigger><SelectValue /></SelectTrigger>
                                 <SelectContent>{stocks.map((s) => <SelectItem key={s.id} value={String(s.id)}>{s.Nom_Stock}</SelectItem>)}</SelectContent>
                             </Select>
+
                             <div className="flex justify-end gap-2">
                                 <Button variant="outline" onClick={() => setIsEditAlimentDialogOpen(false)}>Annuler</Button>
                                 <Button onClick={handleUpdateAliment}>Enregistrer</Button>

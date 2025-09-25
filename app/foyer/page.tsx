@@ -1,24 +1,26 @@
-// Displays a list of foyers for the user to choose from.
-// Loads foyers from localStorage on mount.
+"use client"
+
+import { useEffect, useState } from "react"
+import { useRouter } from "next/navigation"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
+
 export default function ChooseFoyerPage() {
     const [foyers, setFoyers] = useState<{ id: number; name: string; role: string }[]>([])
     const router = useRouter()
 
     useEffect(() => {
-        // Retrieve foyers from localStorage
         const foyersFromStorage = localStorage.getItem("userFoyers")
         if (foyersFromStorage) {
             setFoyers(JSON.parse(foyersFromStorage))
         }
     }, [])
 
-    // Handles foyer selection: saves ID and redirects
     const handleChoose = (foyerId: number) => {
         localStorage.setItem("foyerId", foyerId.toString())
-        router.push("/") // Redirect to dashboard
+        router.push("/") // Redirect to dashboard after choosing
     }
 
-    // Renders foyer selection UI
     return (
         <div className="min-h-screen flex items-center justify-center p-4">
             <Card className="w-full max-w-md">

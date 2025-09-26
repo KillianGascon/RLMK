@@ -1,24 +1,26 @@
 import { prisma } from "@/lib/prisma"
-import { NextResponse } from "next/server"
+import { NextRequest, NextResponse } from "next/server"
 
-// PUT (update a food item)
-export async function PUT(req: Request, { params }: { params: { id: string } }) {
+export async function PUT(
+    req: NextRequest,
+    context: { params: Promise<{ id: string }> }
+) {
+    const { id } = await context.params   // 👈 obligé car TS croit que c’est un Promise
+
     try {
-        // Parse the request body as JSON
         const body = await req.json()
         const {
-            Nom_Aliment,           // Food name
-            Description_Aliment,   // Food description
-            Date_Peremption,       // Expiration date
-            Type_Aliment,          // Food type
-            Quantite,              // Quantity
-            Unite_Quantite,        // Quantity unit
-            Id_Stock,              // Stock ID
+            Nom_Aliment,
+            Description_Aliment,
+            Date_Peremption,
+            Type_Aliment,
+            Quantite,
+            Unite_Quantite,
+            Id_Stock,
         } = body
 
-        // Update the food item in the database
         const updatedAliment = await prisma.aliment.update({
-            where: { id: Number(params.id) }, // Find by ID
+            where: { id: Number(id) },
             data: {
                 Nom_Aliment,
                 Description_Aliment: Description_Aliment || null,
@@ -30,26 +32,25 @@ export async function PUT(req: Request, { params }: { params: { id: string } }) 
             },
         })
 
-        // Return the updated food item as JSON
-        return NextResponse.json(updatedAliment)
+        return NextResponse.json(updatedAliment, { status: 200 })
     } catch (err) {
-        // Log and return a server error
         console.error("Error PUT /api/aliment/[id]:", err)
         return NextResponse.json({ error: "Server error" }, { status: 500 })
     }
 }
 
-// DELETE (delete a food item)
-export async function DELETE(req: Request, { params }: { params: { id: string } }) {
+export async function DELETE(
+    req: NextRequest,
+    context: { params: Promise<{ id: string }> }
+) {
+    const { id } = await context.params   // 👈 pareil ici
+
     try {
-        // Delete the food item from the database
         await prisma.aliment.delete({
-            where: { id: Number(params.id) },
+            where: { id: Number(id) },
         })
-        // Return success response
-        return NextResponse.json({ success: true })
+        return NextResponse.json({ success: true }, { status: 200 })
     } catch (err) {
-        // Log and return a server error
         console.error("Error DELETE /api/aliment/[id]:", err)
         return NextResponse.json({ error: "Server error" }, { status: 500 })
     }

@@ -1,16 +1,18 @@
 import { prisma } from "@/lib/prisma"
-import { NextResponse } from "next/server"
+import { NextRequest, NextResponse } from "next/server"
 
 // Update a room by ID
-export async function PUT(req: Request, { params }: { params: { id: string } }) {
+export async function PUT(
+    req: NextRequest,
+    context: { params: Promise<{ id: string }> }
+) {
     try {
-        // Parse room ID from route parameters
-        const pieceId = Number(params.id)
-        // Parse request body for updated room data
+        const { id } = await context.params   // 🔑 il faut await
+        const pieceId = Number(id)
+
         const body = await req.json()
         const { name, type, description, area } = body
 
-        // Update room in the database
         const updatedPiece = await prisma.piece.update({
             where: { id: pieceId },
             data: {
@@ -21,30 +23,28 @@ export async function PUT(req: Request, { params }: { params: { id: string } }) 
             },
         })
 
-        // Return updated room data as JSON
         return NextResponse.json(updatedPiece)
-    } catch (err) {
-        // Log and return server error
+    } catch (err: unknown) {
         console.error("Error PUT /api/room/[id]:", err)
         return NextResponse.json({ error: "Server error" }, { status: 500 })
     }
 }
 
 // Delete a room by ID
-export async function DELETE(req: Request, { params }: { params: { id: string } }) {
+export async function DELETE(
+    req: NextRequest,
+    context: { params: Promise<{ id: string }> }
+) {
     try {
-        // Parse room ID from route parameters
-        const pieceId = Number(params.id)
+        const { id } = await context.params   // 🔑 idem
+        const pieceId = Number(id)
 
-        // Delete room from the database
         await prisma.piece.delete({
             where: { id: pieceId },
         })
 
-        // Return success response
         return NextResponse.json({ message: "Room deleted successfully", id: pieceId })
-    } catch (err) {
-        // Log and return server error
+    } catch (err: unknown) {
         console.error("Error DELETE /api/room/[id]:", err)
         return NextResponse.json({ error: "Server error" }, { status: 500 })
     }

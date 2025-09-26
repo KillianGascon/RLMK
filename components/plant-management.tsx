@@ -16,7 +16,6 @@
     } from "@/components/ui/dialog"
     import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
     import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-    import { Progress } from "@/components/ui/progress"
     import {
         ResponsiveContainer,
         Area,
@@ -25,12 +24,10 @@
         YAxis,
         CartesianGrid,
     } from "recharts"
-    import { ChartTooltip, ChartTooltipContent } from "@/components/ui/chart"
     import {
         Plus,
         Leaf,
         Droplets,
-        Thermometer,
         Sun,
         AlertTriangle,
         Settings,
@@ -65,13 +62,27 @@
 
     interface SensorData {
         timestamp: string
-        humidity?: number
-        temperature?: number
-        light?: number
-        soilMoisture?: number
+        humidity?: number | null
+        temperature?: number | null
+        light?: number | null
+        soilMoisture?: number | null
         esp32Id: number
     }
 
+
+    interface ESP32ApiResponse {
+        id: number
+        AdresseMac_ESP32: string
+    }
+
+    interface HistoryData {
+        timestamp: string
+        soilMoisture?: number | null
+        temperature?: number | null
+        light?: number | null
+        humidity?: number
+        esp32Id: number
+    }
 
     export function PlantManagement({ foyerId }: { foyerId: number }) {
         // --- State for plants and loading status ---
@@ -102,14 +113,11 @@
             const fetchESP32 = async () => {
                 try {
                     const res = await fetch("/api/esp32")
-                    const data = await res.json()
-
-                    // map pour adapter les champs
-                    const mapped: ESP32[] = data.map((esp: any) => ({
+                    const data: ESP32ApiResponse[] = await res.json()
+                    const mapped: ESP32[] = data.map((esp) => ({
                         id: esp.id,
                         AdresseMac_ESP32: esp.AdresseMac_ESP32,
                     }))
-
                     setEsp32List(mapped)
                 } catch (err) {
                     console.error("Error fetching ESP32:", err)
@@ -163,7 +171,7 @@
             fetchAllSensorData()
         }, [plants])
 
-        // Historique des données de la plante sélectionnée
+       // Historique des données de la plante sélectionnée
         useEffect(() => {
             if (!selectedPlant) return
 
@@ -172,50 +180,10 @@
                     const res = await fetch(`/api/plants/${selectedPlant.id}/history`)
                     if (!res.ok) throw new Error("Failed to fetch history")
 
-                    const data = await res.json()
+                    const data: HistoryData[] = await res.json()
 
-                    // Adapter le format pour le graphique
-                    const formatted = data
-                        .map((entry: any) => {
-                            let ts: string | null = null
-
-                            if (entry.Timestamp) {
-                                // Si format MySQL style "2025-09-25 16:30:00"
-                                const parsed = entry.Timestamp.includes(" ")
-                                    ? new Date(entry.Timestamp.replace(" ", "T") + "Z")
-                                    : new Date(entry.Timestamp)
-
-                                if (!isNaN(parsed.getTime())) {
-                                    ts = parsed.toISOString()
-                                }
-                            }
-
-                            return {
-                                timestamp: ts,
-                                soilMoisture:
-                                    entry.Type_Donnee === "SoilMoisture" || entry.Type_Donnee === "Humidite"
-                                        ? Number(entry.Valeur_Donnee)
-                                        : null,
-                                temperature:
-                                    entry.Type_Donnee === "Temperature" ? Number(entry.Valeur_Donnee) : null,
-                                light:
-                                    entry.Type_Donnee?.toLowerCase().includes("light")
-                                        ? Number(entry.Valeur_Donnee)
-                                        : null,
-                            }
-                        })
-                        .filter((d: any) => d.timestamp) // garder uniquement les entrées avec une date valide
-
-                    // Fusionner par timestamp (humidite + temp + light au même instant)
-                    const merged: Record<string, any> = {}
-                    formatted.forEach((d: any) => {
-                        if (!merged[d.timestamp]) merged[d.timestamp] = { timestamp: d.timestamp }
-                        if (d.soilMoisture !== null) merged[d.timestamp].soilMoisture = d.soilMoisture
-                        if (d.temperature !== null) merged[d.timestamp].temperature = d.temperature
-                        if (d.light !== null) merged[d.timestamp].light = d.light
-                    })
-
-                    setSensorData(Object.values(merged))
+                    // ✅ Ton endpoint renvoie déjà le format final
+                    setSensorData(data)
                 } catch (err) {
                     console.error("Error fetching plant history:", err)
                 }
@@ -223,8 +191,6 @@
 
             fetchHistory()
         }, [selectedPlant])
-
-
 
 
         // Auto-select first plant if none is selected

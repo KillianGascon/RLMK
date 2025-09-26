@@ -1,76 +1,62 @@
 import { prisma } from "@/lib/prisma"
-import { NextResponse } from "next/server"
+import { NextRequest, NextResponse } from "next/server"
 
-// Define the type for route parameters
-interface Params {
-    params: { id: string }
-}
-
-// 🔵 GET a single plant by ID
-export async function GET(req: Request, { params }: Params) {
+// GET plant by ID
+export async function GET(
+    req: NextRequest,
+    context: { params: Promise<{ id: string }> } // 🔑 params est un Promise
+) {
     try {
-        // Parse plant ID from route parameters
-        const plantId = parseInt(params.id)
-        // Fetch plant from database
-        const p = await prisma.plante.findUnique({ where: { id: plantId } })
+        const { id } = await context.params        // 🔑 il faut await
+        const plantId = parseInt(id, 10)
 
-        // If plant not found, return 404 error
+        const p = await prisma.plante.findUnique({ where: { id: plantId } })
         if (!p) {
             return NextResponse.json({ error: "Plant not found" }, { status: 404 })
         }
 
-        // Format plant data for response
-        const formatted = {
+        return NextResponse.json({
             id: p.id.toString(),
             name: p.Nom_Plante,
             species: p.Espece,
             location: p.Emplacement,
             plantedDate: p.Date_Plantation?.toISOString() ?? "",
-            lastWatered: "",
             wateringFrequency: parseInt(p.Frequence_Arrosage) || 7,
             optimalHumidity: p.Humidite_Optimale ? Number(p.Humidite_Optimale) : 50,
             optimalTemperature: p.Temperature_Optimale ? Number(p.Temperature_Optimale) : 22,
-            currentHumidity: 50,
-            currentTemperature: 22,
             lightRequirement: p.Besoin_Lumiere.toLowerCase() as "low" | "medium" | "high",
             status: "healthy",
             notes: p.Description_Plante ?? "",
             Id_ESP32: p.Id_ESP32 ?? null,
-        }
-
-        // Return formatted plant data as JSON
-        return NextResponse.json(formatted)
+        })
     } catch (err) {
-        // Log and return server error
         console.error("Error GET /api/plants/[id]:", err)
         return NextResponse.json({ error: "Server error" }, { status: 500 })
     }
 }
 
-// 🟡 PUT update plant by ID
-export async function PUT(req: Request, { params }: Params) {
+// PUT plant by ID
+export async function PUT(
+    req: NextRequest,
+    context: { params: Promise<{ id: string }> }
+) {
     try {
-        const plantId = parseInt(params.id)
+        const { id } = await context.params
+        const plantId = parseInt(id, 10)
         const body = await req.json()
 
-        // ⚡ Vérifier si un autre plant utilise déjà cet ESP32
         if (body.Id_ESP32) {
             const existing = await prisma.plante.findFirst({
-                where: {
-                    Id_ESP32: body.Id_ESP32,
-                    NOT: { id: plantId }, // exclure la plante en cours d’édition
-                },
+                where: { Id_ESP32: body.Id_ESP32, NOT: { id: plantId } },
             })
-
             if (existing) {
                 return NextResponse.json(
-                    { error: `ESP32 #${body.Id_ESP32} is already linked to another plant (id ${existing.id})` },
+                    { error: `ESP32 #${body.Id_ESP32} already linked to plant ${existing.id}` },
                     { status: 400 }
                 )
             }
         }
 
-        // 🔄 Update plant
         const updated = await prisma.plante.update({
             where: { id: plantId },
             data: {
@@ -83,7 +69,7 @@ export async function PUT(req: Request, { params }: Params) {
                 Date_Plantation: body.plantedDate ? new Date(body.plantedDate) : null,
                 Humidite_Optimale: body.optimalHumidity ?? null,
                 Temperature_Optimale: body.optimalTemperature ?? null,
-                Id_ESP32: body.Id_ESP32 ?? null, // associer l’ESP32
+                Id_ESP32: body.Id_ESP32 ?? null,
             },
         })
 
@@ -94,22 +80,18 @@ export async function PUT(req: Request, { params }: Params) {
     }
 }
 
-
-// 🔴 DELETE plant by ID
-export async function DELETE(req: Request, { params }: Params) {
+// DELETE plant by ID
+export async function DELETE(
+    req: NextRequest,
+    context: { params: Promise<{ id: string }> }
+) {
     try {
-        // Parse plant ID from route parameters
-        const plantId = parseInt(params.id)
+        const { id } = await context.params
+        const plantId = parseInt(id, 10)
 
-        // Delete plant from database
-        await prisma.plante.delete({
-            where: { id: plantId },
-        })
-
-        // Return success response
+        await prisma.plante.delete({ where: { id: plantId } })
         return NextResponse.json({ success: true })
     } catch (err) {
-        // Log and return server error
         console.error("Error DELETE /api/plants/[id]:", err)
         return NextResponse.json({ error: "Server error" }, { status: 500 })
     }

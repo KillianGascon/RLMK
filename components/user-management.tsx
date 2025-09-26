@@ -26,6 +26,15 @@ interface User {
     joinDate: string
 }
 
+interface UserApiResponse {
+    id: number
+    name: string
+    email: string
+    phone?: string | null
+    role?: "admin" | "member" | null
+}
+
+
 export function UserManagement({ foyerId }: { foyerId: number }) {
     // --- State: list of users ---
     const [users, setUsers] = useState<User[]>([])
@@ -41,28 +50,29 @@ export function UserManagement({ foyerId }: { foyerId: number }) {
     useEffect(() => {
         const fetchUsers = async () => {
             const res = await fetch(`/api/foyer/${foyerId}/users`)
-            const data = await res.json()
+            const data: UserApiResponse[] = await res.json()
 
-            // Map API response to User type
-            const mapped: User[] = data.map((u: any) => ({
+            // Map API -> User
+            const mapped: User[] = data.map((u) => ({
                 id: u.id,
                 name: u.name,
                 email: u.email,
-                role: u.role as "admin" | "member" | null,
+                role: u.role ?? null,
                 phone: u.phone || undefined,
-                // For now we assign current date as joinDate
+                // TODO: à remplacer par la vraie valeur si ton API renvoie "joinDate"
                 joinDate: new Date().toISOString().split("T")[0],
             }))
 
             setUsers(mapped)
 
-            // Load role from localStorage (simulating current user role)
+            // Charger rôle utilisateur connecté
             const role = localStorage.getItem("userRole") as "admin" | "member" | null
             if (role) setCurrentUserRole(role)
         }
 
         fetchUsers()
     }, [foyerId])
+
 
     // 🔹 Change a user's role (API + local state update)
     const handleRoleChange = async () => {

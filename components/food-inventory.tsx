@@ -1,7 +1,7 @@
 "use client"
 
 // Imports React hooks and UI components for cards, dialogs, inputs, etc.
-import { useEffect, useState } from "react"
+import { useEffect, useState, useCallback } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -32,6 +32,11 @@ interface Stock {
 interface Room {
     id: number
     name: string
+}
+
+interface RoomApiResponse {
+    id: number
+    Nom_Piece: string
 }
 
 interface Aliment {
@@ -97,23 +102,34 @@ export function FoodInventory({ foyerId }: { foyerId: number }) {
     useEffect(() => {
         const fetchRooms = async () => {
             const res = await fetch(`/api/room?foyerId=${foyerId}`)
-            const data = await res.json()
-            setRooms(data.map((r: any) => ({ id: r.id, name: r.Nom_Piece })))
+            const data: RoomApiResponse[] = await res.json()
+            setRooms(data.map((r) => ({ id: r.id, name: r.Nom_Piece })))
         }
         fetchRooms()
     }, [foyerId])
 
-    // --- Fetch stocks ---
-    const fetchStocks = async () => {
-        const res = await fetch(`/api/stock?foyerId=${foyerId}`)
-        const data = await res.json()
-        setStocks(data)
-        setLoading(false)
-    }
-
+// --- Fetch stocks ---
     useEffect(() => {
+        const fetchStocks = async () => {
+            const res = await fetch(`/api/stock?foyerId=${foyerId}`)
+            const data: Stock[] = await res.json()
+            setStocks(data)
+            setLoading(false)
+        }
         fetchStocks()
     }, [foyerId])
+
+    const loadStocks = useCallback(async () => {
+        const res = await fetch(`/api/stock?foyerId=${foyerId}`)
+        const data: Stock[] = await res.json()
+        setStocks(data)
+        setLoading(false)
+    }, [foyerId])
+
+    useEffect(() => {
+        loadStocks()
+    }, [loadStocks])
+
 
     // --- Fetch aliments ---
     const fetchAliments = async () => {
@@ -180,7 +196,7 @@ export function FoodInventory({ foyerId }: { foyerId: number }) {
         })
         const data = await res.json()
         setAliments([...aliments, data])
-        await fetchStocks()
+        await loadStocks()
         setNewAliment({
             Nom_Aliment: "",
             Description_Aliment: "",
@@ -204,7 +220,7 @@ export function FoodInventory({ foyerId }: { foyerId: number }) {
         })
         const data = await res.json()
         setAliments(aliments.map((a) => (a.id === data.id ? data : a)))
-        await fetchStocks()
+        await loadStocks()
         setEditingAliment(null)
         setIsEditAlimentDialogOpen(false)
     }
@@ -214,7 +230,7 @@ export function FoodInventory({ foyerId }: { foyerId: number }) {
     const handleDeleteAliment = async (id: number) => {
         await fetch(`/api/aliment/${id}`, { method: "DELETE" })
         setAliments(aliments.filter((a) => a.id !== id))
-        await fetchStocks()
+        await loadStocks()
     }
 
     // Returns the appropriate icon for a stock type

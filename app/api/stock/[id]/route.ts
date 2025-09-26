@@ -1,24 +1,24 @@
 import { prisma } from "@/lib/prisma"
-import { NextResponse } from "next/server"
+import { NextRequest, NextResponse } from "next/server"
 
 // PUT: Update a stock item by ID
 export async function PUT(
-    req: Request,
-    { params }: { params: { id: string } }
+    req: NextRequest,
+    context: { params: Promise<{ id: string }> }
 ) {
     try {
-        // Parse request body for updated stock data
+        const { id } = await context.params   // ✅ attendre le Promise
+        const stockId = Number(id)
+
         const body = await req.json()
         const { Nom_Stock, Description_Stock, Id_Piece, Type_Stock } = body
 
-        // Validate required fields
         if (!Nom_Stock || !Id_Piece || !Type_Stock) {
             return NextResponse.json({ error: "Missing fields" }, { status: 400 })
         }
 
-        // Update stock in the database, including related room and food count
         const updatedStock = await prisma.stock.update({
-            where: { id: Number(params.id) },
+            where: { id: stockId },
             data: {
                 Nom_Stock,
                 Description_Stock: Description_Stock || null,
@@ -26,15 +26,13 @@ export async function PUT(
                 Type_Stock,
             },
             include: {
-                Piece: true, // Include related room
-                _count: { select: { Aliment: true } }, // Include count of related food items
+                Piece: true,
+                _count: { select: { Aliment: true } },
             },
         })
 
-        // Return updated stock as JSON
         return NextResponse.json(updatedStock)
-    } catch (err) {
-        // Log and return server error
+    } catch (err: unknown) {
         console.error("Error PUT /api/stock/[id]:", err)
         return NextResponse.json({ error: "Server error" }, { status: 500 })
     }
@@ -42,23 +40,23 @@ export async function PUT(
 
 // DELETE: Remove a stock item by ID
 export async function DELETE(
-    req: Request,
-    { params }: { params: { id: string } }
+    req: NextRequest,
+    context: { params: Promise<{ id: string }> }
 ) {
     try {
-        // Delete stock from the database, including related room and food count
+        const { id } = await context.params   // ✅ idem ici
+        const stockId = Number(id)
+
         const deletedStock = await prisma.stock.delete({
-            where: { id: Number(params.id) },
+            where: { id: stockId },
             include: {
-                Piece: true, // Include related room
-                _count: { select: { Aliment: true } }, // Include count of related food items
+                Piece: true,
+                _count: { select: { Aliment: true } },
             },
         })
 
-        // Return deleted stock as JSON
         return NextResponse.json(deletedStock)
-    } catch (err) {
-        // Log and return server error
+    } catch (err: unknown) {
         console.error("Error DELETE /api/stock/[id]:", err)
         return NextResponse.json({ error: "Server error" }, { status: 500 })
     }

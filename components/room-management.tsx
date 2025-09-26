@@ -26,6 +26,16 @@ interface Room {
     foyerId: number
 }
 
+interface RoomApiResponse {
+    id: number
+    Nom_Piece: string
+    Type_Piece: string
+    Description_Piece?: string
+    Surface_m2: string | number
+    Id_Foyer: number
+}
+
+
 export function RoomManagement({ foyerId }: { foyerId: number }) {
     // --- State for rooms list, add dialog, and edit dialog ---
     const [rooms, setRooms] = useState<Room[]>([])
@@ -44,9 +54,9 @@ export function RoomManagement({ foyerId }: { foyerId: number }) {
     useEffect(() => {
         const fetchRooms = async () => {
             const res = await fetch(`/api/room?foyerId=${foyerId}`)
-            const data = await res.json()
-            // Map API fields to Room interface
-            const mapped: Room[] = data.map((p: any) => ({
+            const data: RoomApiResponse[] = await res.json()
+
+            const mapped: Room[] = data.map((p) => ({
                 id: p.id,
                 name: p.Nom_Piece,
                 type: p.Type_Piece,
@@ -54,6 +64,7 @@ export function RoomManagement({ foyerId }: { foyerId: number }) {
                 area: Number(p.Surface_m2),
                 foyerId: p.Id_Foyer,
             }))
+
             setRooms(mapped)
         }
         fetchRooms()

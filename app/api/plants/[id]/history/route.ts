@@ -6,24 +6,33 @@ interface Params {
     params: { id: string }
 }
 
+// Helper function to invert and clamp soil moisture values
+// The sensor gives an inverted value (low = wet, high = dry)
+// Example: sensor 40 → real humidity 60%
+function normalizeSoil(value: number): number {
+    const corrected = 100 - value
+    return Math.max(0, Math.min(100, corrected)) // clamp between 0 and 100
+}
+
 export async function GET(req: Request, { params }: Params) {
     try {
         const plantId = parseInt(params.id)
 
-        // Vérifier si la plante existe et a un ESP32
+        // Check if the plant exists and has an ESP32 assigned
         const plant = await prisma.plante.findUnique({
             where: { id: plantId },
             select: { Id_ESP32: true },
         })
 
+        // If no plant or no ESP32 is linked, return an empty array
         if (!plant || !plant.Id_ESP32) {
             return NextResponse.json([], { status: 200 })
         }
 
-        // Récupérer toutes les données liées à cette plante
+        // Get all sensor data related to this plant (linked via ESP32 ID)
         const history = await prisma.donnees.findMany({
             where: { Id_ESP32: plant.Id_ESP32 },
-            orderBy: { Timestamp: "asc" },
+            orderBy: { Timestamp: "asc" }, // oldest → newest
             select: {
                 Type_Donnee: true,
                 Valeur_Donnee: true,
@@ -31,24 +40,21 @@ export async function GET(req: Request, { params }: Params) {
             },
         })
 
-        // Transformer en format lisible par le graphique
-        const formatted = history.map((d) => ({
-            timestamp: d.Timestamp,
-            soilMoisture:
-                d.Type_Donnee.toLowerCase() === "soilmoisture" ||
-                d.Type_Donnee.toLowerCase() === "humidite"
-                    ? d.Valeur_Donnee
-                    : null,
-            temperature:
-                d.Type_Donnee.toLowerCase() === "temperature"
-                    ? d.Valeur_Donnee
-                    : null,
-            light:
-                d.Type_Donnee.toLowerCase().includes("light")
-                    ? d.Valeur_Donnee
-                    : null,
-        }))
+        // Format the data for easier use in charts
+        const formatted = history.map((d) => {
+            const type = d.Type_Donnee.toLowerCase()
+            return {
+                timestamp: d.Timestamp, // when the data was recorded
+                soilMoisture:
+                    type === "soilmoisture" || type === "humidite"
+                        ? normalizeSoil(d.Valeur_Donnee) // corrected value
+                        : null,
+                temperature: type === "temperature" ? d.Valeur_Donnee : null,
+                light: type.includes("light") ? d.Valeur_Donnee : null,
+            }
+        })
 
+        // Return formatted data as JSON
         return NextResponse.json(formatted)
     } catch (err) {
         console.error("Error GET /api/plants/[id]/history:", err)
